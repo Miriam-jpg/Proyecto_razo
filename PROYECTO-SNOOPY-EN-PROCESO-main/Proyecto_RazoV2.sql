@@ -413,7 +413,7 @@ END //
 -- --------------------------------------------------------------------------------
 -- NUEVOS PROCEDIMIENTOS DE GESTIÓN DE INTEGRANTES
 -- --------------------------------------------------------------------------------
-
+DELIMITER //
 -- Listar integrantes (Actualizado para devolver ID)
 DROP PROCEDURE IF EXISTS ListarIntegrantesPorEquipo;
 CREATE PROCEDURE ListarIntegrantesPorEquipo(IN p_id_equipo INT)
@@ -422,8 +422,10 @@ BEGIN
     FROM integrantes 
     WHERE id_equipo = p_id_equipo;
 END //
+DELIMITER ;
 
 -- Eliminar integrante con seguridad (Verifica dueño del equipo)
+DELIMITER //
 DROP PROCEDURE IF EXISTS EliminarIntegrante;
 CREATE PROCEDURE EliminarIntegrante(
     IN p_id_integrante INT, 
@@ -451,7 +453,9 @@ BEGIN
         END IF;
     END IF;
 END //
+DELIMITER ;
 
+DELIMITER //
 -- Editar integrante (Opcional, por si se requiere editar en lugar de borrar/agregar)
 DROP PROCEDURE IF EXISTS EditarIntegrante;
 CREATE PROCEDURE EditarIntegrante(
@@ -530,6 +534,105 @@ BEGIN
         
         SET p_resultado = 'ÉXITO: Evaluación registrada correctamente.';
     END IF;
+END //
+
+DELIMITER ;
+
+
+USE concurso_robotica;
+
+-- 1. Agregar columna para guardar el detalle de los checkboxes (JSON)
+ALTER TABLE evaluaciones ADD COLUMN detalles_evaluacion JSON DEFAULT NULL;
+
+-- 2. Actualizar el procedimiento almacenado para recibir los detalles
+DROP PROCEDURE IF EXISTS RegistrarEvaluacion;
+
+DELIMITER //
+CREATE PROCEDURE RegistrarEvaluacion(
+    IN p_id_equipo INT,
+    IN p_id_juez INT,
+    IN p_total INT,
+    IN p_detalles JSON,  -- Nuevo parámetro
+    OUT p_resultado VARCHAR(255)
+)
+BEGIN
+    DECLARE v_existe INT;
+
+    SELECT COUNT(*) INTO v_existe FROM evaluaciones WHERE id_equipo = p_id_equipo;
+
+    IF v_existe > 0 THEN
+        UPDATE evaluaciones 
+        SET puntuacion_total = p_total, 
+            id_juez = p_id_juez, 
+            detalles_evaluacion = p_detalles, -- Guardamos el JSON
+            fecha_evaluacion = NOW()
+        WHERE id_equipo = p_id_equipo;
+        
+        SET p_resultado = 'ÉXITO: Evaluación actualizada correctamente.';
+    ELSE
+        INSERT INTO evaluaciones(id_equipo, id_juez, puntuacion_total, detalles_evaluacion)
+        VALUES(p_id_equipo, p_id_juez, p_total, p_detalles);
+        
+        UPDATE equipos SET estado_proyecto = 'EVALUADO' WHERE id_equipo = p_id_equipo;
+        
+        SET p_resultado = 'ÉXITO: Evaluación registrada correctamente.';
+    END IF;
+END //
+DELIMITER ;
+
+DELIMITER //
+
+DROP PROCEDURE IF EXISTS Sp_Admin_ListarUsuariosCandidatos;
+
+CREATE PROCEDURE Sp_Admin_ListarUsuariosCandidatos()
+BEGIN
+    -- Aumentamos el límite de caracteres para evitar que la lista de categorías se corte
+    SET SESSION group_concat_max_len = 10000;
+
+    SELECT 
+        u.id_usuario, 
+        u.nombres, 
+        u.apellidos, 
+        u.email, 
+        u.escuela_proc, 
+        u.tipo_usuario,
+        -- Subconsulta para categorías donde es Coach (equipos activos)
+        (SELECT GROUP_CONCAT(DISTINCT c.nombre_categoria SEPARATOR ', ')
+         FROM equipos e
+         JOIN categorias c ON e.id_categoria = c.id_categoria
+         WHERE e.id_coach = u.id_usuario AND e.activo = 1) as categorias_equipos,
+        -- Subconsulta para categorías donde es Juez
+        (SELECT GROUP_CONCAT(DISTINCT c.nombre_categoria SEPARATOR ', ')
+         FROM jueces_eventos je
+         JOIN categorias c ON je.id_categoria = c.id_categoria
+         WHERE je.id_juez = u.id_usuario) as categorias_juez
+    FROM usuarios u 
+    WHERE (u.tipo_usuario = 'COACH' OR u.tipo_usuario = 'COACH_JUEZ' OR u.tipo_usuario = 'JUEZ') 
+      AND u.activo = 1 
+    ORDER BY u.nombres ASC;
+END //
+
+DELIMITER ;
+
+DELIMITER //
+
+-- 1. Procedimiento para listar eventos activos (Para el Dropdown)
+DROP PROCEDURE IF EXISTS Sp_AdminListarEventosActivos //
+CREATE PROCEDURE Sp_AdminListarEventosActivos()
+BEGIN
+    SELECT id_evento, nombre_evento 
+    FROM eventos 
+    WHERE activo = 1 
+    ORDER BY fecha_evento DESC;
+END //
+
+-- 2. Procedimiento para listar categorías (ID y Nombre)
+DROP PROCEDURE IF EXISTS Sp_AdminListarCategorias //
+CREATE PROCEDURE Sp_AdminListarCategorias()
+BEGIN
+    SELECT id_categoria, nombre_categoria 
+    FROM categorias 
+    ORDER BY id_categoria ASC;
 END //
 
 DELIMITER ;
