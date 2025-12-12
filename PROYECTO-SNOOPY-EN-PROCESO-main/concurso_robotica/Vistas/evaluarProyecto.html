@@ -11,152 +11,553 @@
     <link rel="stylesheet" href="../Diseño/style_juez.css">
 
     <style>
-        .score-input {
-            width: 60px;
-            text-align: center;
+        /* Estilos personalizados para mantener la estética original */
+        .header-diseno { background-color: #fff5f5; border-left: 5px solid #f56565; color: #c53030; }
+        .header-prog { background-color: #f0fff4; border-left: 5px solid #48bb78; color: #2f855a; }
+        .header-const { background-color: #ebf8ff; border-left: 5px solid #4299e1; color: #2b6cb0; }
+        
+        .check-input { display: none; }
+        
+        .check-card {
             border: 2px solid #e2e8f0;
             border-radius: 0.5rem;
-            padding: 0.5rem;
-            font-weight: bold;
-            color: #2d3748;
+            padding: 0.75rem;
+            cursor: pointer;
             transition: all 0.2s;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            background: white;
+            height: 100%;
         }
-        .score-input:focus { border-color: #5852CB; outline: none; box-shadow: 0 0 0 3px rgba(88, 82, 203, 0.1); }
-        .header-diseno { background-color: #fff5f5; border-left: 4px solid #f56565; color: #c53030; }
-        .header-prog { background-color: #f0fff4; border-left: 4px solid #48bb78; color: #2f855a; }
-        .header-const { background-color: #ebf8ff; border-left: 4px solid #4299e1; color: #2b6cb0; }
+        
+        .check-card:hover { border-color: #cbd5e0; background-color: #f8fafc; }
+        
+        .check-input:checked + .check-card {
+            border-color: #5852CB;
+            background-color: #EEF2FF;
+            box-shadow: 0 0 0 1px #5852CB;
+        }
+
+        .check-input:checked + .check-card .icon-state {
+            color: #5852CB;
+            transform: scale(1.1);
+        }
+
         .sticky-summary { position: sticky; bottom: 1rem; z-index: 40; }
+        .score-transition { transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen flex flex-col">
+<body class="bg-gray-50 min-h-screen flex flex-col font-['Inter']">
 
-    <header class="gradient-header text-white shadow-lg shrink-0">
+    <header class="bg-gradient-to-r from-[#1a1a2e] to-[#16213e] text-white shadow-lg shrink-0">
         <div class="container mx-auto px-6 py-4 flex justify-between items-center">
             <div class="flex items-center gap-3">
-                <a href="juezPanel.html" class="bg-white/20 hover:bg-white/30 p-2 rounded-lg transition text-white">
+                <a href="juezPanel.html" class="bg-white/10 hover:bg-white/20 p-2 rounded-lg transition text-white">
                     <i class="fa-solid fa-arrow-left"></i>
                 </a>
                 <div>
                     <h1 class="text-lg font-bold tracking-wide">EVALUACIÓN DE PROTOTIPO</h1>
-                    <p class="text-xs text-white/90 opacity-80" id="projectInfo">Cargando...</p>
+                    <p class="text-xs text-white/80" id="projectInfo">Cargando...</p>
                 </div>
             </div>
             <div class="text-right hidden md:block">
-                <p class="text-sm font-bold">Juez Asignado</p>
-                <div class="text-xs bg-white/20 px-2 py-0.5 rounded-full inline-block">Modo Edición</div>
+                <div class="text-xs bg-green-500/20 text-green-300 px-3 py-1 rounded-full border border-green-500/30 inline-block font-bold">
+                    Modo Evaluación
+                </div>
             </div>
         </div>
     </header>
 
-    <main class="flex-1 container mx-auto p-4 md:p-6 max-w-5xl pb-24">
+    <main class="flex-1 container mx-auto p-4 md:p-6 max-w-6xl pb-32">
         <form id="evalForm" onsubmit="enviarEvaluacion(event)" class="space-y-8">
             
-            <!-- INFO EQUIPO -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex flex-col md:flex-row justify-between items-center gap-4">
-                <div class="flex items-center gap-4">
-                    <div class="w-16 h-16 rounded-full bg-gradient-to-br from-[#52C5CB] to-[#5852CB] flex items-center justify-center text-white text-2xl shadow-md">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex flex-col md:flex-row justify-between items-center gap-6 relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-gray-50 rounded-bl-full -z-0"></div>
+                
+                <div class="flex items-center gap-5 z-10 w-full md:w-auto">
+                    <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-[#52C5CB] to-[#5852CB] flex items-center justify-center text-white text-3xl shadow-lg transform rotate-3 hover:rotate-0 transition-transform duration-300">
                         <i class="fa-solid fa-robot"></i>
                     </div>
                     <div>
-                        <h2 class="text-2xl font-bold text-gray-800" id="nombreEquipo">Cargando...</h2>
-                        <p class="text-sm text-[#5289CB] font-medium"><i class="fa-solid fa-microchip mr-1"></i> <span id="nombrePrototipo">...</span></p>
-                        <span class="inline-block mt-2 px-3 py-1 bg-gray-100 text-gray-600 text-xs font-bold rounded-full border border-gray-200" id="equipoIdDisplay">ID: --</span>
+                        <h2 class="text-2xl font-bold text-gray-800 leading-tight" id="nombreEquipo">Cargando...</h2>
+                        <p class="text-sm text-[#5852CB] font-semibold mt-1"><i class="fa-solid fa-microchip mr-1"></i> <span id="nombrePrototipo">...</span></p>
+                        <span class="inline-flex items-center mt-3 px-2.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800" id="equipoIdDisplay">
+                            ID: --
+                        </span>
                     </div>
                 </div>
-                <div class="text-center md:text-right">
-                    <p class="text-xs text-gray-500 font-bold uppercase mb-1">Puntuación Actual</p>
-                    <div class="score-circle mx-auto md:ml-auto bg-gray-200 text-gray-500 transition-colors duration-500" id="totalScoreCircle">0</div>
-                    <p class="text-[10px] text-gray-400 mt-2">Max. Posible: 100 pts</p>
+
+                <div class="flex items-center gap-6 z-10 bg-gray-50 p-4 rounded-xl border border-gray-100">
+                    <div class="text-right">
+                        <p class="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">Puntuación Total</p>
+                        <p class="text-[10px] text-gray-400">Calculada automáticamente</p>
+                    </div>
+                    <div class="relative w-20 h-20 flex items-center justify-center">
+                        <svg class="w-full h-full transform -rotate-90">
+                            <circle cx="40" cy="40" r="36" stroke="currentColor" stroke-width="8" fill="transparent" class="text-gray-200" />
+                            <circle id="progressCircle" cx="40" cy="40" r="36" stroke="currentColor" stroke-width="8" fill="transparent" 
+                                    class="text-[#5852CB] score-transition" 
+                                    stroke-dasharray="226" 
+                                    stroke-dashoffset="226" />
+                        </svg>
+                        <span class="absolute text-2xl font-bold text-gray-700" id="totalScoreCircle">0</span>
+                    </div>
                 </div>
             </div>
 
-            <!-- SECCIONES -->
-            <section class="card overflow-hidden">
-                <div class="header-diseno p-4 flex justify-between items-center">
-                    <h3 class="font-bold text-lg"><i class="fa-solid fa-pen-ruler mr-2"></i>ÁREA DE DISEÑO</h3>
-                    <span class="text-xs font-bold bg-white/50 px-2 py-1 rounded">20 Puntos Máx</span>
+            <div class="bg-blue-50 border-l-4 border-[#5852CB] p-4 text-sm text-blue-800 rounded-r-lg shadow-sm flex items-start gap-3">
+                <i class="fa-solid fa-circle-info mt-1"></i>
+                <p>Seleccione únicamente los criterios que el equipo <strong>CUMPLE satisfactoriamente</strong>. El sistema calculará la nota final basada en el porcentaje de cumplimiento.</p>
+            </div>
+
+            <section class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+                <div class="header-diseno p-5 flex justify-between items-center">
+                    <h3 class="font-bold text-xl flex items-center gap-2">
+                        <span class="bg-red-100 p-2 rounded-lg"><i class="fa-solid fa-pen-ruler"></i></span> 
+                        ÁREA DE DISEÑO
+                    </h3>
+                    <span class="text-sm font-bold bg-white/80 px-3 py-1 rounded-full shadow-sm text-red-600 border border-red-100" id="badge-diseno">0/12</span>
                 </div>
-                <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div>
-                        <label class="font-bold text-gray-700 block mb-2">1. Bitácora</label>
-                        <input type="number" name="diseno_bitacora" min="0" max="10" class="score-input mb-1" required oninput="calcularTotal()">
-                        <p class="text-xs text-gray-500">Registro, cambios, diagramas, ortografía.</p>
+                
+                <div class="p-6">
+                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 border-b pb-2">Bitácora & Documentación</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                        <label class="cursor-pointer group">
+                            <input type="checkbox" class="check-input criteria-check" value="diseno_fechas" onchange="calcularTotal()">
+                            <div class="check-card">
+                                <i class="fa-regular fa-calendar-check mt-1 text-gray-400 icon-state"></i>
+                                <div><span class="block text-sm font-bold text-gray-700">Registro de Fechas</span></div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer group">
+                            <input type="checkbox" class="check-input criteria-check" value="diseno_justificacion" onchange="calcularTotal()">
+                            <div class="check-card">
+                                <i class="fa-solid fa-pencil mt-1 text-gray-400 icon-state"></i>
+                                <div><span class="block text-sm font-bold text-gray-700">Justificación de Cambios</span></div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer group">
+                            <input type="checkbox" class="check-input criteria-check" value="diseno_diagramas" onchange="calcularTotal()">
+                            <div class="check-card">
+                                <i class="fa-regular fa-image mt-1 text-gray-400 icon-state"></i>
+                                <div><span class="block text-sm font-bold text-gray-700">Diagramas e Imágenes</span></div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer group">
+                            <input type="checkbox" class="check-input criteria-check" value="diseno_ortografia" onchange="calcularTotal()">
+                            <div class="check-card">
+                                <i class="fa-solid fa-spell-check mt-1 text-gray-400 icon-state"></i>
+                                <div><span class="block text-sm font-bold text-gray-700">Ortografía y Redacción</span></div>
+                            </div>
+                        </label>
+                         <label class="cursor-pointer group">
+                            <input type="checkbox" class="check-input criteria-check" value="diseno_presentacion" onchange="calcularTotal()">
+                            <div class="check-card">
+                                <i class="fa-solid fa-file-pdf mt-1 text-gray-400 icon-state"></i>
+                                <div><span class="block text-sm font-bold text-gray-700">Presentación General</span></div>
+                            </div>
+                        </label>
                     </div>
-                    <div>
-                        <label class="font-bold text-gray-700 block mb-2">2. Medio Digital (CAD)</label>
-                        <input type="number" name="diseno_digital" min="0" max="10" class="score-input mb-1" required oninput="calcularTotal()">
-                        <p class="text-xs text-gray-500">Video, modelado Inventor, simulación.</p>
+
+                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 border-b pb-2">Modelo Digital y Físico</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <label class="cursor-pointer group">
+                            <input type="checkbox" class="check-input criteria-check" value="diseno_ensamble" onchange="calcularTotal()">
+                            <div class="check-card">
+                                <i class="fa-solid fa-puzzle-piece mt-1 text-gray-400 icon-state"></i>
+                                <div>
+                                    <span class="block text-sm font-bold text-gray-700">Ensamble del Prototipo</span>
+                                    <span class="text-xs text-gray-500">Correcta unión de piezas.</span>
+                                </div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer group">
+                            <input type="checkbox" class="check-input criteria-check" value="diseno_video" onchange="calcularTotal()">
+                            <div class="check-card">
+                                <i class="fa-solid fa-video mt-1 text-gray-400 icon-state"></i>
+                                <div><span class="block text-sm font-bold text-gray-700">Video y Animación</span></div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer group">
+                            <input type="checkbox" class="check-input criteria-check" value="diseno_inventor" onchange="calcularTotal()">
+                            <div class="check-card">
+                                <i class="fa-solid fa-cube mt-1 text-gray-400 icon-state"></i>
+                                <div><span class="block text-sm font-bold text-gray-700">Modelado Inventor</span></div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer group">
+                            <input type="checkbox" class="check-input criteria-check" value="diseno_restricciones" onchange="calcularTotal()">
+                            <div class="check-card">
+                                <i class="fa-solid fa-rotate mt-1 text-gray-400 icon-state"></i>
+                                <div>
+                                    <span class="block text-sm font-bold text-gray-700">Restricciones Movimiento</span>
+                                    <span class="text-xs text-gray-500">Rotación y Traslación correctas.</span>
+                                </div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer group">
+                            <input type="checkbox" class="check-input criteria-check" value="diseno_analisis" onchange="calcularTotal()">
+                            <div class="check-card">
+                                <i class="fa-solid fa-microscope mt-1 text-gray-400 icon-state"></i>
+                                <div><span class="block text-sm font-bold text-gray-700">Análisis de Elementos</span></div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer group">
+                            <input type="checkbox" class="check-input criteria-check" value="diseno_coherencia" onchange="calcularTotal()">
+                            <div class="check-card">
+                                <i class="fa-solid fa-clone mt-1 text-gray-400 icon-state"></i>
+                                <div><span class="block text-sm font-bold text-gray-700">Modelo vs Físico</span></div>
+                            </div>
+                        </label>
+                         <label class="cursor-pointer group">
+                            <input type="checkbox" class="check-input criteria-check" value="diseno_simulacion" onchange="calcularTotal()">
+                            <div class="check-card">
+                                <i class="fa-solid fa-calculator mt-1 text-gray-400 icon-state"></i>
+                                <div><span class="block text-sm font-bold text-gray-700">Simulación vs Cálculos</span></div>
+                            </div>
+                        </label>
                     </div>
                 </div>
             </section>
 
-            <section class="card overflow-hidden">
-                <div class="header-prog p-4 flex justify-between items-center">
-                    <h3 class="font-bold text-lg"><i class="fa-solid fa-code mr-2"></i>ÁREA DE PROGRAMACIÓN</h3>
-                    <span class="text-xs font-bold bg-white/50 px-2 py-1 rounded">40 Puntos Máx</span>
+            <section class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+                <div class="header-prog p-5 flex justify-between items-center">
+                    <h3 class="font-bold text-xl flex items-center gap-2">
+                        <span class="bg-green-100 p-2 rounded-lg"><i class="fa-solid fa-code"></i></span> 
+                        ÁREA DE PROGRAMACIÓN
+                    </h3>
+                    <span class="text-sm font-bold bg-white/80 px-3 py-1 rounded-full shadow-sm text-green-700 border border-green-100" id="badge-prog">0/19</span>
                 </div>
-                <div class="p-6 space-y-6">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div>
-                            <label class="font-bold text-gray-700 block mb-2">1. Inspección General</label>
-                            <input type="number" name="prog_inspeccion" min="0" max="10" class="score-input mb-1" required oninput="calcularTotal()">
-                            <p class="text-xs text-gray-500">Software RobotC, funciones, modularidad.</p>
-                        </div>
-                        <div>
-                            <label class="font-bold text-gray-700 block mb-2">2. Sistema Autónomo</label>
-                            <input type="number" name="prog_autonomo" min="0" max="10" class="score-input mb-1" required oninput="calcularTotal()">
-                            <p class="text-xs text-gray-500">Documentación, sensores.</p>
-                        </div>
+
+                <div class="p-6">
+                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 border-b pb-2">Inspección de Código</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                        <label class="cursor-pointer group">
+                            <input type="checkbox" class="check-input criteria-check" value="prog_robotc" onchange="calcularTotal()">
+                            <div class="check-card">
+                                <i class="fa-solid fa-laptop-code mt-1 text-gray-400 icon-state"></i>
+                                <div><span class="block text-sm font-bold text-gray-700">Software RobotC</span></div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer group">
+                            <input type="checkbox" class="check-input criteria-check" value="prog_funciones" onchange="calcularTotal()">
+                            <div class="check-card">
+                                <i class="fa-solid fa-code-branch mt-1 text-gray-400 icon-state"></i>
+                                <div><span class="block text-sm font-bold text-gray-700">Uso de Funciones</span></div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer group">
+                            <input type="checkbox" class="check-input criteria-check" value="prog_complejidad" onchange="calcularTotal()">
+                            <div class="check-card">
+                                <i class="fa-solid fa-network-wired mt-1 text-gray-400 icon-state"></i>
+                                <div>
+                                    <span class="block text-sm font-bold text-gray-700">Complejidad del Programa</span>
+                                    <span class="text-xs text-gray-500">Nivel y estructura lógica.</span>
+                                </div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer group">
+                            <input type="checkbox" class="check-input criteria-check" value="prog_modular" onchange="calcularTotal()">
+                            <div class="check-card">
+                                <i class="fa-solid fa-layer-group mt-1 text-gray-400 icon-state"></i>
+                                <div>
+                                    <span class="block text-sm font-bold text-gray-700">Código Modular</span>
+                                    <span class="text-xs text-gray-500">Compacto y Eficiente.</span>
+                                </div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer group">
+                            <input type="checkbox" class="check-input criteria-check" value="prog_justif_sec" onchange="calcularTotal()">
+                            <div class="check-card">
+                                <i class="fa-solid fa-comment-dots mt-1 text-gray-400 icon-state"></i>
+                                <div>
+                                    <span class="block text-sm font-bold text-gray-700">Justificación Secuencias</span>
+                                    <span class="text-xs text-gray-500">Explicación clara del flujo.</span>
+                                </div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer group">
+                            <input type="checkbox" class="check-input criteria-check" value="prog_conocimiento" onchange="calcularTotal()">
+                            <div class="check-card">
+                                <i class="fa-solid fa-brain mt-1 text-gray-400 icon-state"></i>
+                                <div><span class="block text-sm font-bold text-gray-700">Conocimiento Estruct.</span></div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer group">
+                            <input type="checkbox" class="check-input criteria-check" value="prog_depuracion" onchange="calcularTotal()">
+                            <div class="check-card">
+                                <i class="fa-solid fa-bug-slash mt-1 text-gray-400 icon-state"></i>
+                                <div><span class="block text-sm font-bold text-gray-700">Rutinas Depuración</span></div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer group">
+                            <input type="checkbox" class="check-input criteria-check" value="prog_sensores_decl" onchange="calcularTotal()">
+                            <div class="check-card">
+                                <i class="fa-solid fa-keyboard mt-1 text-gray-400 icon-state"></i>
+                                <div>
+                                    <span class="block text-sm font-bold text-gray-700">Uso y Depuración Sensores</span>
+                                    <span class="text-xs text-gray-500">Declaración correcta en código.</span>
+                                </div>
+                            </div>
+                        </label>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4 border-t">
-                        <div>
-                            <label class="font-bold text-gray-700 block mb-2">3. Sistema Manipulado</label>
-                            <input type="number" name="prog_manipulado" min="0" max="10" class="score-input mb-1" required oninput="calcularTotal()">
-                            <p class="text-xs text-gray-500">Vínculo Joystick-Robot, calibración.</p>
-                        </div>
-                        <div>
-                            <label class="font-bold text-gray-700 block mb-2">4. Demostración (15s)</label>
-                            <input type="number" name="prog_demo" min="0" max="10" class="score-input mb-1" required oninput="calcularTotal()">
-                            <p class="text-xs text-gray-500">Ejecución rutina, sin fallos.</p>
-                        </div>
+
+                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 border-b pb-2">Sistema Autónomo</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                        <label class="cursor-pointer group">
+                            <input type="checkbox" class="check-input criteria-check" value="prog_auto_doc" onchange="calcularTotal()">
+                            <div class="check-card">
+                                <i class="fa-solid fa-file-code mt-1 text-gray-400 icon-state"></i>
+                                <div><span class="block text-sm font-bold text-gray-700">Documentación Auto.</span></div>
+                            </div>
+                        </label>
+                         <label class="cursor-pointer group">
+                            <input type="checkbox" class="check-input criteria-check" value="prog_auto_explicacion" onchange="calcularTotal()">
+                            <div class="check-card">
+                                <i class="fa-solid fa-chalkboard-user mt-1 text-gray-400 icon-state"></i>
+                                <div>
+                                    <span class="block text-sm font-bold text-gray-700">Explicación Rutina</span>
+                                    <span class="text-xs text-gray-500">Claridad en la lógica autónoma.</span>
+                                </div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer group">
+                            <input type="checkbox" class="check-input criteria-check" value="prog_vinculo_acciones" onchange="calcularTotal()">
+                            <div class="check-card">
+                                <i class="fa-solid fa-link mt-1 text-gray-400 icon-state"></i>
+                                <div>
+                                    <span class="block text-sm font-bold text-gray-700">Vinculación Acciones</span>
+                                    <span class="text-xs text-gray-500">Relación Robot-Código Autónomo.</span>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 border-b pb-2">Modo Driver & Demostración</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <label class="cursor-pointer group">
+                            <input type="checkbox" class="check-input criteria-check" value="prog_joystick" onchange="calcularTotal()">
+                            <div class="check-card">
+                                <i class="fa-solid fa-gamepad mt-1 text-gray-400 icon-state"></i>
+                                <div><span class="block text-sm font-bold text-gray-700">Vínculo Joystick</span></div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer group">
+                            <input type="checkbox" class="check-input criteria-check" value="prog_respuesta_mando" onchange="calcularTotal()">
+                            <div class="check-card">
+                                <i class="fa-solid fa-satellite-dish mt-1 text-gray-400 icon-state"></i>
+                                <div>
+                                    <span class="block text-sm font-bold text-gray-700">Respuesta al Mando</span>
+                                    <span class="text-xs text-gray-500">Sin retrasos o errores de input.</span>
+                                </div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer group">
+                            <input type="checkbox" class="check-input criteria-check" value="prog_calib_driver" onchange="calcularTotal()">
+                            <div class="check-card">
+                                <i class="fa-solid fa-sliders mt-1 text-gray-400 icon-state"></i>
+                                <div><span class="block text-sm font-bold text-gray-700">Calibración Driver</span></div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer group">
+                            <input type="checkbox" class="check-input criteria-check" value="prog_habilidad" onchange="calcularTotal()">
+                            <div class="check-card">
+                                <i class="fa-solid fa-hands-holding-circle mt-1 text-gray-400 icon-state"></i>
+                                <div><span class="block text-sm font-bold text-gray-700">Habilidad Manipulación</span></div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer group">
+                            <input type="checkbox" class="check-input criteria-check" value="prog_demo_15s" onchange="calcularTotal()">
+                            <div class="check-card">
+                                <i class="fa-solid fa-stopwatch mt-1 text-gray-400 icon-state"></i>
+                                <div>
+                                    <span class="block text-sm font-bold text-gray-700">Demostración 15s</span>
+                                    <span class="text-xs text-gray-500">Ejecución completa.</span>
+                                </div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer group">
+                            <input type="checkbox" class="check-input criteria-check" value="prog_sin_inconvenientes" onchange="calcularTotal()">
+                            <div class="check-card">
+                                <i class="fa-solid fa-check-double mt-1 text-gray-400 icon-state"></i>
+                                <div>
+                                    <span class="block text-sm font-bold text-gray-700">Sin Inconvenientes</span>
+                                    <span class="text-xs text-gray-500">Fluidez durante la rutina.</span>
+                                </div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer group">
+                            <input type="checkbox" class="check-input criteria-check" value="prog_objetivo" onchange="calcularTotal()">
+                            <div class="check-card">
+                                <i class="fa-solid fa-bullseye mt-1 text-gray-400 icon-state"></i>
+                                <div><span class="block text-sm font-bold text-gray-700">Cumple Objetivo</span></div>
+                            </div>
+                        </label>
+                         <label class="cursor-pointer group">
+                            <input type="checkbox" class="check-input criteria-check" value="prog_doc_driver" onchange="calcularTotal()">
+                            <div class="check-card">
+                                <i class="fa-solid fa-file-invoice mt-1 text-gray-400 icon-state"></i>
+                                <div><span class="block text-sm font-bold text-gray-700">Doc. Modo Driver</span></div>
+                            </div>
+                        </label>
                     </div>
                 </div>
             </section>
 
-            <section class="card overflow-hidden">
-                <div class="header-const p-4 flex justify-between items-center">
-                    <h3 class="font-bold text-lg"><i class="fa-solid fa-screwdriver-wrench mr-2"></i>ÁREA DE CONSTRUCCIÓN</h3>
-                    <span class="text-xs font-bold bg-white/50 px-2 py-1 rounded">20 Puntos Máx</span>
+            <section class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+                <div class="header-const p-5 flex justify-between items-center">
+                    <h3 class="font-bold text-xl flex items-center gap-2">
+                        <span class="bg-blue-100 p-2 rounded-lg"><i class="fa-solid fa-screwdriver-wrench"></i></span> 
+                        ÁREA DE CONSTRUCCIÓN
+                    </h3>
+                    <span class="text-sm font-bold bg-white/80 px-3 py-1 rounded-full shadow-sm text-blue-600 border border-blue-100" id="badge-const">0/18</span>
                 </div>
-                <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div>
-                        <label class="font-bold text-gray-700 block mb-2">1. Inspección General</label>
-                        <input type="number" name="const_inspeccion" min="0" max="10" class="score-input mb-1" required oninput="calcularTotal()">
-                        <p class="text-xs text-gray-500">Estética, estabilidad, VEX Robotics.</p>
+
+                <div class="p-6">
+                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 border-b pb-2">Inspección Física y Técnica</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                        <label class="cursor-pointer group">
+                            <input type="checkbox" class="check-input criteria-check" value="const_estetico" onchange="calcularTotal()">
+                            <div class="check-card">
+                                <i class="fa-solid fa-gem mt-1 text-gray-400 icon-state"></i>
+                                <div><span class="block text-sm font-bold text-gray-700">Prototipo Estético</span></div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer group">
+                            <input type="checkbox" class="check-input criteria-check" value="const_estable" onchange="calcularTotal()">
+                            <div class="check-card">
+                                <i class="fa-solid fa-cubes mt-1 text-gray-400 icon-state"></i>
+                                <div><span class="block text-sm font-bold text-gray-700">Estructuras Estables</span></div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer group">
+                            <input type="checkbox" class="check-input criteria-check" value="const_transmision" onchange="calcularTotal()">
+                            <div class="check-card">
+                                <i class="fa-solid fa-gears mt-1 text-gray-400 icon-state"></i>
+                                <div>
+                                    <span class="block text-sm font-bold text-gray-700">Sistemas Transmisión</span>
+                                    <span class="text-xs text-gray-500">Correcta implementación.</span>
+                                </div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer group">
+                            <input type="checkbox" class="check-input criteria-check" value="const_sensores" onchange="calcularTotal()">
+                            <div class="check-card">
+                                <i class="fa-solid fa-satellite-dish mt-1 text-gray-400 icon-state"></i>
+                                <div>
+                                    <span class="block text-sm font-bold text-gray-700">Uso de Sensores (Físico)</span>
+                                    <span class="text-xs text-gray-500">Instalación y ubicación.</span>
+                                </div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer group">
+                            <input type="checkbox" class="check-input criteria-check" value="const_cableado" onchange="calcularTotal()">
+                            <div class="check-card">
+                                <i class="fa-solid fa-plug mt-1 text-gray-400 icon-state"></i>
+                                <div><span class="block text-sm font-bold text-gray-700">Cableado Adecuado</span></div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer group">
+                            <input type="checkbox" class="check-input criteria-check" value="const_neumatico" onchange="calcularTotal()">
+                            <div class="check-card">
+                                <i class="fa-solid fa-wind mt-1 text-gray-400 icon-state"></i>
+                                <div><span class="block text-sm font-bold text-gray-700">Sistema Neumático</span></div>
+                            </div>
+                        </label>
+                         <label class="cursor-pointer group">
+                            <input type="checkbox" class="check-input criteria-check" value="const_alcance" onchange="calcularTotal()">
+                            <div class="check-card">
+                                <i class="fa-solid fa-ruler-horizontal mt-1 text-gray-400 icon-state"></i>
+                                <div><span class="block text-sm font-bold text-gray-700">Conocimiento Alcance</span></div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer group">
+                            <input type="checkbox" class="check-input criteria-check" value="const_potencia" onchange="calcularTotal()">
+                            <div class="check-card">
+                                <i class="fa-solid fa-bolt mt-1 text-gray-400 icon-state"></i>
+                                <div><span class="block text-sm font-bold text-gray-700">Potencia</span></div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer group">
+                            <input type="checkbox" class="check-input criteria-check" value="const_torque" onchange="calcularTotal()">
+                            <div class="check-card">
+                                <i class="fa-solid fa-wrench mt-1 text-gray-400 icon-state"></i>
+                                <div><span class="block text-sm font-bold text-gray-700">Torque</span></div>
+                            </div>
+                        </label>
+                         <label class="cursor-pointer group">
+                            <input type="checkbox" class="check-input criteria-check" value="const_velocidad_fisica" onchange="calcularTotal()">
+                            <div class="check-card">
+                                <i class="fa-solid fa-gauge mt-1 text-gray-400 icon-state"></i>
+                                <div><span class="block text-sm font-bold text-gray-700">Velocidad</span></div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer group">
+                            <input type="checkbox" class="check-input criteria-check" value="const_vex" onchange="calcularTotal()">
+                            <div class="check-card">
+                                <i class="fa-solid fa-copyright mt-1 text-gray-400 icon-state"></i>
+                                <div><span class="block text-sm font-bold text-gray-700">Marca VEX Robotics</span></div>
+                            </div>
+                        </label>
+                         <label class="cursor-pointer group">
+                            <input type="checkbox" class="check-input criteria-check" value="const_arm" onchange="calcularTotal()">
+                            <div class="check-card">
+                                <i class="fa-solid fa-microchip mt-1 text-gray-400 icon-state"></i>
+                                <div><span class="block text-sm font-bold text-gray-700">Proc. ARM Cortex-M3</span></div>
+                            </div>
+                        </label>
                     </div>
-                    <div>
-                        <label class="font-bold text-gray-700 block mb-2">2. Libreta de Ingeniería</label>
-                        <input type="number" name="const_libreta" min="0" max="10" class="score-input mb-1" required oninput="calcularTotal()">
-                        <p class="text-xs text-gray-500">Cálculos, estructuras, engranes.</p>
+
+                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 border-b pb-2">Libreta de Ingeniería (Cálculos)</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <label class="cursor-pointer group">
+                            <input type="checkbox" class="check-input criteria-check" value="const_calc_estruc" onchange="calcularTotal()">
+                            <div class="check-card">
+                                <i class="fa-solid fa-ruler-combined mt-1 text-gray-400 icon-state"></i>
+                                <div><span class="block text-sm font-bold text-gray-700">Análisis Estructuras</span></div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer group">
+                            <input type="checkbox" class="check-input criteria-check" value="const_velocidad_ang" onchange="calcularTotal()">
+                            <div class="check-card">
+                                <i class="fa-solid fa-gauge-high mt-1 text-gray-400 icon-state"></i>
+                                <div><span class="block text-sm font-bold text-gray-700">Velocidad Angular</span></div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer group">
+                            <input type="checkbox" class="check-input criteria-check" value="const_engranes" onchange="calcularTotal()">
+                            <div class="check-card">
+                                <i class="fa-solid fa-cogs mt-1 text-gray-400 icon-state"></i>
+                                <div><span class="block text-sm font-bold text-gray-700">Tren de Engranes</span></div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer group">
+                            <input type="checkbox" class="check-input criteria-check" value="const_gravedad" onchange="calcularTotal()">
+                            <div class="check-card">
+                                <i class="fa-solid fa-arrows-to-dot mt-1 text-gray-400 icon-state"></i>
+                                <div><span class="block text-sm font-bold text-gray-700">Centro de Gravedad</span></div>
+                            </div>
+                        </label>
                     </div>
                 </div>
             </section>
 
-            <!-- FOOTER FLOTANTE -->
-            <div class="sticky-summary bg-white border-t border-gray-200 shadow-lg p-4 rounded-xl flex justify-between items-center gap-4 animate-slide">
+            <div class="sticky-summary bg-white border-t border-gray-200 shadow-2xl p-4 rounded-xl flex justify-between items-center gap-4 animate-slide z-50">
                 <div class="hidden md:block">
-                    <span class="text-xs text-gray-500 font-bold uppercase">Total Calculado:</span>
-                    <span class="text-2xl font-bold text-[#5852CB]" id="footerScore">0</span>
-                    <span class="text-xs text-gray-400">/ 100</span>
+                    <p class="text-xs text-gray-500 font-bold uppercase">Resultado Final</p>
+                    <div class="flex items-baseline gap-1">
+                        <span class="text-3xl font-bold text-[#5852CB]" id="footerScore">0</span>
+                        <span class="text-sm text-gray-400 font-medium">/ 100</span>
+                    </div>
                 </div>
                 
                 <div class="flex gap-3 w-full md:w-auto">
-                    <button type="button" onclick="history.back()" class="flex-1 md:flex-none px-6 py-3 rounded-lg border border-gray-300 text-gray-600 font-bold hover:bg-gray-50 transition">
+                    <button type="button" onclick="history.back()" class="flex-1 md:flex-none px-6 py-3 rounded-lg border border-gray-300 text-gray-600 font-bold hover:bg-gray-50 transition uppercase text-sm tracking-wide">
                         Cancelar
                     </button>
-                    <!-- BOTÓN VERDE -->
-                    <button type="submit" class="flex-1 md:flex-none bg-green-500 hover:bg-green-600 transition-colors px-8 py-3 rounded-lg text-white font-bold shadow-lg flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-paper-plane"></i> ENVIAR EVALUACIÓN
+                    <button type="submit" class="flex-1 md:flex-none bg-[#5852CB] hover:bg-[#4c46b6] transition-colors px-8 py-3 rounded-lg text-white font-bold shadow-lg shadow-indigo-200 flex items-center justify-center gap-2 uppercase text-sm tracking-wide">
+                        <i class="fa-solid fa-paper-plane"></i> Guardar Evaluación
                     </button>
                 </div>
             </div>
@@ -172,7 +573,6 @@
         let currentEquipoId = 0;
 
         document.addEventListener('DOMContentLoaded', () => {
-            // Leer parámetros URL
             const urlParams = new URLSearchParams(window.location.search);
             currentEquipoId = urlParams.get('id');
             const nombre = urlParams.get('equipo') || "Equipo Desconocido";
@@ -187,40 +587,77 @@
             document.getElementById('nombreEquipo').innerText = nombre;
             document.getElementById('nombrePrototipo').innerText = prototipo;
             document.getElementById('equipoIdDisplay').innerText = `ID: #${currentEquipoId}`;
-            document.getElementById('projectInfo').innerText = `Evaluando ID: ${currentEquipoId}`;
+            
+            // Inicializar contadores
+            calcularTotal();
         });
 
         function calcularTotal() {
-            const inputs = document.querySelectorAll('.score-input');
-            let total = 0;
-            let maxPuntos = 0;
+            // Contar todos los checkboxes presentes en la página
+            const allChecks = document.querySelectorAll('.criteria-check');
+            const totalPossible = allChecks.length;
+            const checkedCount = document.querySelectorAll('.criteria-check:checked').length;
 
-            inputs.forEach(input => {
-                const val = parseInt(input.value) || 0;
-                total += val;
-                maxPuntos += 10;
-            });
+            // Evitar división por cero
+            const score = totalPossible > 0 ? Math.round((checkedCount / totalPossible) * 100) : 0;
 
-            // Actualizar UI
-            document.getElementById('totalScoreCircle').innerText = total;
-            document.getElementById('footerScore').innerText = total;
+            // Actualizar interfaz visual principal
+            const circleText = document.getElementById('totalScoreCircle');
+            const footerText = document.getElementById('footerScore');
+            
+            // Animación simple de número
+            circleText.innerText = score;
+            footerText.innerText = score;
 
-            const circle = document.getElementById('totalScoreCircle');
-            if (total < 60) circle.style.background = 'linear-gradient(135deg, #f56565, #c53030)';
-            else if (total < 80) circle.style.background = 'linear-gradient(135deg, #ecc94b, #d69e2e)';
-            else circle.style.background = 'linear-gradient(135deg, #48bb78, #2f855a)';
+            // Actualizar barra de progreso circular (SVG)
+            // Circunferencia = 2 * PI * 36 ≈ 226
+            const circle = document.getElementById('progressCircle');
+            const radius = 36;
+            const circumference = 2 * Math.PI * radius;
+            const offset = circumference - (score / 100) * circumference;
+            circle.style.strokeDashoffset = offset;
+
+            // Color según puntaje
+            if (score < 60) {
+                circle.classList.add('text-red-500'); circle.classList.remove('text-yellow-500', 'text-green-500', 'text-[#5852CB]');
+            } else if (score < 80) {
+                circle.classList.add('text-yellow-500'); circle.classList.remove('text-red-500', 'text-green-500', 'text-[#5852CB]');
+            } else if (score < 100) {
+                circle.classList.add('text-green-500'); circle.classList.remove('text-red-500', 'text-yellow-500', 'text-[#5852CB]');
+            } else {
+                circle.classList.add('text-[#5852CB]'); circle.classList.remove('text-red-500', 'text-yellow-500', 'text-green-500');
+            }
+
+            // Actualizar badges por sección
+            updateSectionBadge('.header-diseno', 'badge-diseno');
+            updateSectionBadge('.header-prog', 'badge-prog');
+            updateSectionBadge('.header-const', 'badge-const');
+        }
+
+        function updateSectionBadge(sectionSelector, badgeId) {
+            const section = document.querySelector(sectionSelector).parentElement;
+            const total = section.querySelectorAll('.criteria-check').length;
+            const checked = section.querySelectorAll('.criteria-check:checked').length;
+            document.getElementById(badgeId).innerText = `${checked}/${total}`;
         }
 
         async function enviarEvaluacion(e) {
             e.preventDefault();
             
-            if(!confirm("¿Confirmar envío? No podrás editarlo después.")) return;
+            if(!confirm("¿Confirmar envío de evaluación? Verifique que ha marcado todos los criterios cumplidos.")) return;
 
             const btn = e.target.querySelector('button[type="submit"]');
+            const originalText = btn.innerHTML;
             btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Enviando...';
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Guardando...';
 
             const totalScore = document.getElementById('footerScore').innerText;
+
+            // Recopilar qué criterios fueron marcados
+            const detalles = {};
+            document.querySelectorAll('.criteria-check').forEach(chk => {
+                detalles[chk.value] = chk.checked;
+            });
 
             try {
                 const response = await fetch('../Configuracion/juez_controlador.php', {
@@ -229,7 +666,8 @@
                     body: JSON.stringify({
                         action: 'guardar_evaluacion',
                         id_equipo: currentEquipoId,
-                        total: totalScore
+                        total: totalScore,
+                        detalles: detalles
                     })
                 });
 
@@ -245,7 +683,7 @@
             } catch (error) {
                 mostrarToast(error.message, "error");
                 btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> ENVIAR EVALUACIÓN';
+                btn.innerHTML = originalText;
             }
         }
 
@@ -256,7 +694,35 @@
                 ? '<i class="fa-solid fa-check-circle text-green-500"></i>' 
                 : '<i class="fa-solid fa-circle-xmark text-red-500"></i>';
             t.className = `toast ${type === 'success' ? 'toast-success' : 'toast-error'} show`;
-            setTimeout(() => t.classList.remove('show'), 3000);
+            
+            // Estilos CSS inline
+            t.style.position = 'fixed';
+            t.style.bottom = '20px';
+            t.style.right = '20px';
+            t.style.padding = '1rem 1.5rem';
+            t.style.borderRadius = '0.5rem';
+            t.style.backgroundColor = 'white';
+            t.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1)';
+            t.style.display = 'flex';
+            t.style.alignItems = 'center';
+            t.style.gap = '0.75rem';
+            t.style.zIndex = '100';
+            t.style.transition = 'transform 0.3s ease-out, opacity 0.3s ease-out';
+            t.style.transform = 'translateY(100px)';
+            t.style.opacity = '0';
+            
+            if(type === 'success') t.style.borderLeft = '4px solid #48bb78';
+            else t.style.borderLeft = '4px solid #f56565';
+
+            requestAnimationFrame(() => {
+                t.style.transform = 'translateY(0)';
+                t.style.opacity = '1';
+            });
+
+            setTimeout(() => {
+                t.style.transform = 'translateY(100px)';
+                t.style.opacity = '0';
+            }, 3000);
         }
     </script>
 </body>
