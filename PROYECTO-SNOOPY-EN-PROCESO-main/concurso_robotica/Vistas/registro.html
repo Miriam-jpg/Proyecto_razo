@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Concurso de Robótica - Registro</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <!-- Estilos compartidos -->
+    <link rel="stylesheet" href="../Diseño/style.css">
+</head>
+<body class="flex items-center justify-center p-4 py-8">
+
+    <div class="w-full max-w-[700px] flex flex-col items-center space-y-6">
+        
+        <!-- HEADER -->
+        <div class="text-center space-y-2">
+            <h1 class="text-white text-3xl font-bold tracking-wide drop-shadow-md">
+                CONCURSO DE ROBÓTICA
+            </h1>
+            <p class="text-white/90 text-lg font-medium">
+                Registro de Participante
+            </p>
+        </div>
+
+        <!-- TARJETA DEL FORMULARIO -->
+        <div class="bg-white w-full rounded-2xl shadow-2xl p-8 md:p-10 space-y-6 animate-fade-in-up relative">
+            
+            <!-- Título Sección -->
+            <div class="border-b border-gray-100 pb-4">
+                <h2 class="text-[#2d3748] text-2xl font-bold">Información del Participante</h2>
+                <p class="text-gray-500 text-sm mt-1">Complete todos los campos para registrar su participación</p>
+            </div>
+
+            <!-- Mensaje de Alerta (Oculto) -->
+            <div id="alertBox" class="hidden px-4 py-3 rounded-lg text-sm font-semibold flex items-center gap-2">
+                <i id="alertIcon" class="fa-solid"></i>
+                <span id="alertMessage">Mensaje</span>
+            </div>
+
+            <form id="registerForm" onsubmit="handleRegister(event)" class="space-y-5">
+                
+                <!-- Grid Nombres y Apellidos -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div class="space-y-1">
+                        <label class="block text-gray-600 font-bold text-sm ml-1">Nombres *</label>
+                        <input type="text" id="nombres" class="custom-input w-full px-4 py-3 rounded-lg text-gray-700 bg-gray-50" placeholder="Ingrese sus nombres" required>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="block text-gray-600 font-bold text-sm ml-1">Apellidos *</label>
+                        <input type="text" id="apellidos" class="custom-input w-full px-4 py-3 rounded-lg text-gray-700 bg-gray-50" placeholder="Ingrese sus apellidos" required>
+                    </div>
+                </div>
+
+                <!-- Escuela -->
+                <div class="space-y-1">
+                    <label class="block text-gray-600 font-bold text-sm ml-1">Escuela de Procedencia *</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-[#52C5CB]">
+                            <i class="fa-solid fa-school"></i>
+                        </span>
+                        <input type="text" id="escuela" class="custom-input w-full pl-10 pr-4 py-3 rounded-lg text-gray-700 bg-gray-50" placeholder="Nombre de su escuela (Ej. Prepa 10, ITCM)" required>
+                    </div>
+                </div>
+
+                <!-- Correo -->
+                <div class="space-y-1">
+                    <label class="block text-gray-600 font-bold text-sm ml-1">Correo Electrónico *</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-[#52C5CB]">
+                            <i class="fa-solid fa-envelope"></i>
+                        </span>
+                        <input type="email" id="email" class="custom-input w-full pl-10 pr-4 py-3 rounded-lg text-gray-700 bg-gray-50" placeholder="ejemplo@dominio.com" required>
+                    </div>
+                </div>
+
+                <!-- Contraseña y Medidor -->
+                <div class="space-y-2">
+                    <label class="block text-gray-600 font-bold text-sm ml-1">Contraseña *</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-[#52C5CB]">
+                            <i class="fa-solid fa-lock"></i>
+                        </span>
+                        <input type="password" id="password" oninput="evaluarFuerzaPassword(this.value)"
+                               class="custom-input w-full pl-10 pr-24 py-3 rounded-lg text-gray-700 bg-gray-50" placeholder="••••••••" required>
+                        
+                        <button type="button" onclick="togglePassword()" 
+                                class="absolute inset-y-0 right-0 flex items-center px-4 text-xs font-bold text-white bg-gradient-to-r from-[#52C5CB] to-[#5852CB] rounded-r-lg hover:opacity-90 transition-opacity">
+                            MOSTRAR
+                        </button>
+                    </div>
+
+                    <!-- Barra de Progreso Fuerza -->
+                    <div class="space-y-1 pt-1">
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="text-gray-500">Seguridad:</span>
+                            <span id="strengthLabel" class="font-bold text-gray-400">---</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div id="strengthBar" class="bg-gray-400 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tipo Usuario (Read Only) -->
+                <div class="space-y-1">
+                    <label class="block text-gray-600 font-bold text-sm ml-1">Tipo de Usuario</label>
+                    <input type="text" value="COACH" readonly class="w-full px-4 py-3 rounded-lg text-gray-500 bg-gray-100 border border-gray-200 cursor-not-allowed font-semibold">
+                </div>
+
+                <!-- Términos -->
+                <div class="flex items-start gap-3 pt-2">
+                    <input type="checkbox" id="terms" class="mt-1 w-4 h-4 text-[#5852CB] rounded border-gray-300 focus:ring-[#5852CB] cursor-pointer">
+                    <label class="text-sm text-gray-600">
+                        Acepto los <button type="button" onclick="mostrarTerminos()" class="text-[#5852CB] font-bold underline hover:text-[#52C5CB]">términos y condiciones</button> del concurso.
+                    </label>
+                </div>
+
+                <!-- Botones -->
+                <div class="space-y-4 pt-4">
+                    <button type="submit" class="btn-gradient w-full text-white font-bold py-3.5 rounded-lg text-lg shadow-lg flex justify-center items-center gap-2">
+                        <span>REGISTRAR PARTICIPANTE</span>
+                        <i class="fa-solid fa-user-plus"></i>
+                    </button>
+
+                    <div class="text-center text-sm text-gray-500">
+                        ¿Ya tiene una cuenta registrada? 
+                        <a href="index.html" class="text-[#5852CB] font-bold underline hover:text-[#52C5CB]">Iniciar Sesión</a>
+                    </div>
+                </div>
+
+            </form>
+
+            <div class="border-t border-gray-100 my-6"></div>
+
+            <!-- Footer Info -->
+            <div class="text-center space-y-1 text-xs text-gray-400">
+                <p class="font-bold text-gray-500 text-sm mb-2">CONCURSO NACIONAL DE ROBÓTICA 2025</p>
+                <p>Soporte: <a href="#" class="hover:text-[#5289CB]">soporte@concursorobotica.edu</a></p>
+                <p>Tel: +52 55 1234 5678 | Lun-Vie 9:00 - 18:00</p>
+            </div>
+        </div>
+        
+        <div class="h-10"></div>
+    </div>
+
+    <!-- MODAL DE TÉRMINOS -->
+    <div id="termsModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full max-h-[80vh] flex flex-col animate-fade-in-up">
+            <div class="p-5 border-b border-gray-100 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-[#2d3748]">Términos y Condiciones</h3>
+                <button onclick="cerrarTerminos()" class="text-gray-400 hover:text-red-500">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto text-sm text-gray-600 space-y-4 leading-relaxed">
+                <p><strong>ARTÍCULO 1 - PARTICIPACIÓN</strong><br>• El concurso está abierto a estudiantes de instituciones educativas reconocidas.<br>• Cada participante debe registrarse con información veraz.</p>
+                <p><strong>ARTÍCULO 2 - REQUISITOS TÉCNICOS</strong><br>• Los robots deben cumplir con las especificaciones técnicas publicadas.</p>
+                <p><strong>ARTÍCULO 3 - PROPIEDAD INTELECTUAL</strong><br>• Los participantes conservan los derechos de sus diseños.</p>
+                <p><strong>ARTÍCULO 4 - PREMIOS</strong><br>• Las decisiones del jurado son definitivas.</p>
+                <p><strong>ARTÍCULO 5 - RESPONSABILIDAD</strong><br>• La organización no se hace responsable por daños a equipos personales.</p>
+                <p><strong>ARTÍCULO 6 - PRIVACIDAD</strong><br>• Los datos personales serán utilizados exclusivamente para fines del concurso.</p>
+            </div>
+            <div class="p-5 border-t border-gray-100 text-right">
+                <button onclick="cerrarTerminos()" class="bg-[#52C5CB] text-white px-6 py-2 rounded-lg font-bold hover:bg-[#48b0b6] transition-colors">Entendido</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- LÓGICA DE FUERZA DE CONTRASEÑA (Portado de RegisterController.java) ---
+        function evaluarFuerzaPassword(password) {
+            const label = document.getElementById('strengthLabel');
+            const bar = document.getElementById('strengthBar');
+            
+            if (!password) {
+                bar.style.width = '0%';
+                bar.className = 'bg-gray-400 h-2 rounded-full transition-all duration-500';
+                label.innerText = '---';
+                label.className = 'font-bold text-gray-400';
+                return;
+            }
+
+            let score = 0;
+            if (password.length >= 8) score++;
+            if (/[A-Z]/.test(password)) score++;
+            if (/[a-z]/.test(password)) score++;
+            if (/[0-9]/.test(password)) score++;
+            if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) score++;
+
+            // Actualizar UI según score
+            const width = (score / 5) * 100;
+            bar.style.width = `${width}%`;
+
+            let colorClass = '';
+            let text = '';
+            let textClass = '';
+
+            switch(score) {
+                case 0: case 1:
+                    text = 'Muy débil'; colorClass = 'bg-red-500'; textClass = 'text-red-500'; break;
+                case 2:
+                    text = 'Débil'; colorClass = 'bg-orange-400'; textClass = 'text-orange-400'; break;
+                case 3:
+                    text = 'Media'; colorClass = 'bg-yellow-400'; textClass = 'text-yellow-500'; break;
+                case 4:
+                    text = 'Buena'; colorClass = 'bg-green-400'; textClass = 'text-green-500'; break;
+                case 5:
+                    text = 'Excelente'; colorClass = 'bg-green-600'; textClass = 'text-green-700'; break;
+            }
+
+            bar.className = `${colorClass} h-2 rounded-full transition-all duration-500 shadow-sm`;
+            label.innerText = text;
+            label.className = `font-bold ${textClass}`;
+        }
+
+        // --- VALIDACIONES DE NOMBRE (Portado de RegisterController.java) ---
+        function validarNombre(texto) {
+            const limpio = texto.trim();
+            // 1. Caracteres válidos
+            if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(limpio)) return false;
+            
+            // 2. Anti-Garabatos (Min 3 letras distintas si largo > 5)
+            if (limpio.length >= 5) {
+                const unicos = new Set(limpio.replace(/\s+/g, '').toLowerCase().split('')).size;
+                if (unicos < 3) return false;
+            }
+            return true;
+        }
+
+        function handleRegister(event) {
+            event.preventDefault();
+            
+            const nombres = document.getElementById('nombres').value;
+            const apellidos = document.getElementById('apellidos').value;
+            const email = document.getElementById('email').value;
+            const terms = document.getElementById('terms').checked;
+
+            // Validaciones
+            if (!validarNombre(nombres) || !validarNombre(apellidos)) {
+                mostrarAlerta('El nombre o apellido contiene caracteres inválidos o parece un garabato.', 'error');
+                return;
+            }
+
+            if (!terms) {
+                mostrarAlerta('Debe aceptar los términos y condiciones.', 'warning');
+                return;
+            }
+
+            // Simulación de éxito
+            mostrarAlerta('¡Registro exitoso! Redirigiendo...', 'success');
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 2000);
+        }
+
+        // --- UTILIDADES UI ---
+        function togglePassword() {
+            const input = document.getElementById('password');
+            const btn = input.nextElementSibling; // El botón MOSTRAR
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                btn.innerText = 'OCULTAR';
+            } else {
+                input.type = 'password';
+                btn.innerText = 'MOSTRAR';
+            }
+        }
+
+        function mostrarTerminos() {
+            document.getElementById('termsModal').classList.remove('hidden');
+        }
+
+        function cerrarTerminos() {
+            document.getElementById('termsModal').classList.add('hidden');
+        }
+
+        function mostrarAlerta(msg, tipo) {
+            const box = document.getElementById('alertBox');
+            const icon = document.getElementById('alertIcon');
+            const txt = document.getElementById('alertMessage');
+            
+            box.classList.remove('hidden', 'bg-red-50', 'text-red-600', 'border-red-200', 'bg-green-50', 'text-green-600', 'border-green-200', 'bg-yellow-50', 'text-yellow-600', 'border-yellow-200');
+            icon.className = '';
+
+            if (tipo === 'error') {
+                box.classList.add('bg-red-50', 'text-red-600', 'border', 'border-red-200');
+                icon.classList.add('fa-solid', 'fa-circle-xmark');
+            } else if (tipo === 'success') {
+                box.classList.add('bg-green-50', 'text-green-600', 'border', 'border-green-200');
+                icon.classList.add('fa-solid', 'fa-circle-check');
+            } else { // warning
+                box.classList.add('bg-yellow-50', 'text-yellow-600', 'border', 'border-yellow-200');
+                icon.classList.add('fa-solid', 'fa-triangle-exclamation');
+            }
+
+            txt.innerText = msg;
+            box.classList.add('animate-pulse');
+            setTimeout(() => box.classList.remove('animate-pulse'), 500);
+        }
+    </script>
+</body>
+</html>

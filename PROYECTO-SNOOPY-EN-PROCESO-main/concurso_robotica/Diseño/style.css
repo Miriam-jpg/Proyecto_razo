@@ -1,0 +1,42 @@
+/* Fuente base importada en el HTML, aquí la aplicamos */
+body {
+    font-family: 'Inter', sans-serif;
+    /* Degradado idéntico al diseño original de JavaFX */
+    background: linear-gradient(to bottom, #52C5CB, #5852CB);
+    min-height: 100vh;
+    margin: 0;
+}
+
+/* Estilos específicos para inputs (simulando JavaFX) */
+.custom-input {
+    transition: all 0.3s ease;
+    border: 1.5px solid #52C5CB;
+}
+
+.custom-input:focus {
+    border-color: #5852CB;
+    box-shadow: 0 0 0 3px rgba(88, 82, 203, 0.2);
+    outline: none;
+}
+
+/* Botón con degradado personalizado */
+.btn-gradient {
+    background: linear-gradient(to right, #5289CB, #5852CB);
+    transition: transform 0.1s ease, box-shadow 0.2s ease;
+}
+
+.btn-gradient:hover {
+    opacity: 0.95;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-gradient:active {
+    transform: scale(0.98);
+}
+
+/* Panel de información semitransparente (estilo vidrio) */
+.info-panel {
+    background-color: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px); /* Soporte para Safari */
+}

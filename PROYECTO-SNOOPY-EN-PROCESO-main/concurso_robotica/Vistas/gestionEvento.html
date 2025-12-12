@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Eventos - Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8f9fa; color: #2d3748; }
+        .gradient-header { background: linear-gradient(to right, #52C5CB, #5852CB); }
+        .btn-gradient { background: linear-gradient(to right, #5289CB, #5852CB); color: white; transition: 0.2s; }
+        .btn-gradient:hover { opacity: 0.95; transform: translateY(-1px); }
+        .loader { border: 3px solid #f3f3f3; border-radius: 50%; border-top: 3px solid #52C5CB; width: 20px; height: 20px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .toast { position: fixed; top: 1rem; right: 1rem; background: white; padding: 1rem; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border-left: 4px solid; transform: translateX(150%); transition: transform 0.3s ease-out; z-index: 50; display: flex; align-items: center; gap: 10px; }
+        .toast.show { transform: translateX(0); }
+        .toast-success { border-color: #22c55e; }
+        .toast-error { border-color: #ef4444; }
+    </style>
+</head>
+<body class="bg-gray-50 h-screen flex flex-col">
+
+    <!-- Header con botón VOLVER -->
+    <header class="gradient-header text-white shadow-md p-4 flex justify-between items-center">
+        <div class="flex items-center gap-3">
+            <a href="adminPanel.html" class="bg-white/20 hover:bg-white/30 p-2 rounded-lg transition text-white">
+                <i class="fa-solid fa-arrow-left"></i>
+            </a>
+            <h1 class="text-lg font-bold tracking-wide"><i class="fa-solid fa-calendar-days mr-2"></i>GESTIÓN DE EVENTOS</h1>
+        </div>
+        <div class="text-sm font-medium bg-white/20 px-3 py-1 rounded-full">
+            <i class="fa-solid fa-user-shield mr-1"></i> Admin
+        </div>
+    </header>
+
+    <!-- Contenido -->
+    <main class="flex-1 overflow-y-auto p-6 max-w-5xl mx-auto w-full space-y-6">
+        <!-- Formulario -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div class="flex justify-between items-center mb-4 border-b border-gray-100 pb-2">
+                <h2 class="text-xl font-bold text-gray-800 text-[#5289CB]">Crear Nuevo Evento</h2>
+                <i class="fa-solid fa-plus-circle text-gray-300 text-2xl"></i>
+            </div>
+            
+            <form onsubmit="crearEvento(event)" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                <div class="md:col-span-1">
+                    <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Nombre del Evento</label>
+                    <input type="text" id="nombre" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-[#52C5CB] outline-none transition" placeholder="Ej. Torneo Nacional 2025" required>
+                </div>
+                <div class="md:col-span-1">
+                    <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Fecha</label>
+                    <input type="date" id="fecha" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-[#52C5CB] outline-none transition" required>
+                </div>
+                <div class="md:col-span-1">
+                    <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Lugar</label>
+                    <input type="text" id="lugar" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-[#52C5CB] outline-none transition" placeholder="Ej. Auditorio Principal" required>
+                </div>
+                <div class="md:col-span-1">
+                    <button type="submit" id="btnGuardar" class="w-full btn-gradient py-2.5 rounded-lg font-bold shadow-md flex justify-center items-center gap-2">
+                        <i class="fa-solid fa-save"></i> Guardar Evento
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Lista -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="p-5 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
+                <h3 class="font-bold text-gray-700">Eventos Registrados</h3>
+                <span id="contador" class="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded-full">0</span>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left">
+                    <thead class="text-xs text-gray-500 uppercase bg-gray-100">
+                        <tr>
+                            <th class="px-6 py-3">ID</th>
+                            <th class="px-6 py-3">Nombre</th>
+                            <th class="px-6 py-3">Fecha</th>
+                            <th class="px-6 py-3">Lugar</th>
+                            <th class="px-6 py-3 text-center">Estado</th>
+                            <th class="px-6 py-3 text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaEventos" class="divide-y divide-gray-200">
+                        <tr>
+                            <td colspan="6" class="px-6 py-8 text-center text-gray-400 italic">
+                                <div class="flex justify-center mb-2"><div class="loader"></div></div>
+                                Cargando eventos...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <div id="toast" class="toast">
+        <div id="toastIcon" class="text-xl"></div>
+        <div class="text-sm font-medium" id="toastMessage"></div>
+    </div>
+
+    <script>
+        const API_URL = '../Configuracion/gestionar_eventos.php';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            cargarEventos();
+        });
+
+        // --- 1. LISTAR EVENTOS ---
+        async function cargarEventos() {
+            try {
+                const response = await fetch(API_URL);
+                const text = await response.text();
+                
+                let result;
+                try {
+                    result = JSON.parse(text);
+                } catch (e) {
+                    // Si falla el JSON, lanzamos el error con el texto recibido para verlo en pantalla
+                    throw new Error("Respuesta del servidor no válida: " + text.substring(0, 150));
+                }
+
+                const tbody = document.getElementById('tablaEventos');
+                tbody.innerHTML = '';
+
+                if (result.success && result.data && result.data.length > 0) {
+                    document.getElementById('contador').innerText = result.data.length;
+
+                    result.data.forEach(evt => {
+                        const fechaStr = new Date(evt.fecha_evento).toISOString().split('T')[0];
+                        const tr = document.createElement('tr');
+                        tr.className = "hover:bg-gray-50 transition-colors";
+                        tr.innerHTML = `
+                            <td class="px-6 py-4 text-gray-500 text-xs font-mono">#${evt.id_evento}</td>
+                            <td class="px-6 py-4 font-bold text-gray-800">${evt.nombre_evento}</td>
+                            <td class="px-6 py-4 text-gray-600">${fechaStr}</td>
+                            <td class="px-6 py-4 text-gray-600"><i class="fa-solid fa-location-dot mr-1 text-[#52C5CB]"></i> ${evt.lugar}</td>
+                            <td class="px-6 py-4 text-center"><span class="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-bold">ACTIVO</span></td>
+                            <td class="px-6 py-4 text-center">
+                                <button onclick="eliminarEvento('${evt.id_evento}')" class="text-red-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-lg transition">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                } else {
+                    document.getElementById('contador').innerText = "0";
+                    tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-gray-400">No hay eventos activos.<br><small class="text-red-400">' + (result.message || "") + '</small></td></tr>';
+                }
+            } catch (error) {
+                console.error("Error Fetch:", error);
+                document.getElementById('tablaEventos').innerHTML = `
+                    <tr>
+                        <td colspan="6" class="px-6 py-8 text-center text-red-600 bg-red-50 rounded-lg border border-red-200">
+                            <i class="fa-solid fa-bug text-2xl mb-2"></i><br>
+                            <strong>Error del Sistema:</strong><br>
+                            <span class="text-xs font-mono break-all">${error.message}</span>
+                        </td>
+                    </tr>`;
+            }
+        }
+
+        // --- 2. CREAR EVENTO ---
+        async function crearEvento(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnGuardar');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<div class="loader mx-auto"></div>';
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        accion: 'crear',
+                        nombre: document.getElementById('nombre').value.trim(),
+                        fecha: document.getElementById('fecha').value,
+                        lugar: document.getElementById('lugar').value.trim()
+                    })
+                });
+                
+                const text = await response.text();
+                let result;
+                try { result = JSON.parse(text); } catch(e) { throw new Error(text); }
+
+                if (result.success) {
+                    mostrarToast(result.message, "success");
+                    e.target.reset();
+                    cargarEventos();
+                } else {
+                    mostrarToast(result.message, "error");
+                }
+            } catch (error) {
+                mostrarToast("Error: " + error.message, "error");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+
+        // --- 3. ELIMINAR EVENTO ---
+        async function eliminarEvento(id) {
+            if(!confirm("¿Eliminar evento?")) return;
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ accion: 'eliminar', id: id })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    mostrarToast(result.message, "success");
+                    cargarEventos();
+                } else {
+                    mostrarToast(result.message, "error");
+                }
+            } catch (error) {
+                mostrarToast("Error de red", "error");
+            }
+        }
+
+        function mostrarToast(msg, type) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMessage').innerText = msg;
+            document.getElementById('toastIcon').innerHTML = type === 'success' ? '<i class="fa-solid fa-check-circle text-green-500"></i>' : '<i class="fa-solid fa-circle-xmark text-red-500"></i>';
+            toast.className = `toast ${type === 'success' ? 'toast-success' : 'toast-error'} show`;
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+    </script>
+</body>
+</html>

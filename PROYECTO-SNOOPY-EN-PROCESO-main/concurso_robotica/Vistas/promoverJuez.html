@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Jueces - Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8f9fa; color: #2d3748; }
+        .gradient-header { background: linear-gradient(to right, #5852CB, #5289CB); }
+        .loader { border: 3px solid #f3f3f3; border-radius: 50%; border-top: 3px solid #5852CB; width: 24px; height: 24px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        /* Toast Notification */
+        .toast { position: fixed; top: 1rem; right: 1rem; background: white; padding: 1rem; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border-left: 4px solid; transform: translateX(150%); transition: transform 0.3s ease-out; z-index: 50; display: flex; align-items: center; gap: 10px; }
+        .toast.show { transform: translateX(0); }
+        .toast-success { border-color: #22c55e; }
+        .toast-error { border-color: #ef4444; }
+        
+        /* Modal */
+        .modal { opacity: 0; visibility: hidden; transition: all 0.3s ease-in-out; }
+        .modal.active { opacity: 1; visibility: visible; }
+        .modal-content { transform: scale(0.95); transition: all 0.3s ease-in-out; }
+        .modal.active .modal-content { transform: scale(1); }
+
+        /* Tabs */
+        .tab-btn { border-bottom: 2px solid transparent; transition: all 0.2s; }
+        .tab-btn.active { border-color: #5852CB; color: #5852CB; font-weight: bold; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-gray-50 h-screen flex flex-col overflow-hidden">
+
+    <!-- Header -->
+    <header class="gradient-header text-white shadow-md p-4 flex justify-between items-center shrink-0">
+        <div class="flex items-center gap-3">
+            <a href="adminPanel.html" class="bg-white/20 hover:bg-white/30 p-2 rounded-lg transition text-white">
+                <i class="fa-solid fa-arrow-left"></i>
+            </a>
+            <h1 class="text-lg font-bold tracking-wide"><i class="fa-solid fa-gavel mr-2"></i>GESTIÓN DE JUECES</h1>
+        </div>
+        <div class="text-sm font-medium bg-white/20 px-3 py-1 rounded-full">
+            <i class="fa-solid fa-user-shield mr-1"></i> Admin
+        </div>
+    </header>
+
+    <!-- TABS DE NAVEGACIÓN -->
+    <div class="bg-white border-b border-gray-200 px-6 pt-2 shrink-0">
+        <div class="flex gap-6 max-w-6xl mx-auto">
+            <button onclick="cambiarTab('roles')" id="tab-roles" class="tab-btn active pb-3 text-sm text-gray-500 hover:text-[#5852CB]">
+                <i class="fa-solid fa-user-gear mr-1"></i> Roles y Permisos
+            </button>
+            <button onclick="cambiarTab('asignaciones')" id="tab-asignaciones" class="tab-btn pb-3 text-sm text-gray-500 hover:text-[#5852CB]">
+                <i class="fa-solid fa-clipboard-user mr-1"></i> Asignación a Eventos
+            </button>
+        </div>
+    </div>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="flex-1 overflow-y-auto p-6 bg-[#f8f9fa]">
+        <div class="max-w-[90%] mx-auto w-full h-full">
+
+            <!-- ======================= TAB 1: ROLES Y PERMISOS ======================= -->
+            <div id="content-roles" class="tab-content active space-y-6">
+                <!-- Aviso Informativo -->
+                <div class="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg shadow-sm flex gap-4 items-start">
+                    <div class="text-blue-500 text-xl mt-1"><i class="fa-solid fa-circle-info"></i></div>
+                    <div>
+                        <h3 class="font-bold text-blue-800 text-sm">Gestión de Roles Globales</h3>
+                        <p class="text-sm text-blue-700 mt-1">
+                            Defina si un usuario es Coach, Juez o Ambos. Esto habilita sus permisos generales en el sistema.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Tabla -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="p-5 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
+                        <h3 class="font-bold text-gray-700">Usuarios Registrados</h3>
+                        <div class="relative">
+                            <i class="fa-solid fa-search absolute left-3 top-2.5 text-gray-400 text-xs"></i>
+                            <input type="text" id="buscadorRoles" onkeyup="filtrarTablaRoles()" placeholder="Buscar..." class="pl-8 pr-4 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-[#5852CB] outline-none w-64">
+                        </div>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left">
+                            <thead class="text-xs text-gray-500 uppercase bg-gray-100">
+                                <tr>
+                                    <th class="px-6 py-3">Usuario</th>
+                                    <th class="px-6 py-3 text-center">Rol Actual</th>
+                                    <th class="px-6 py-3">Categoría Juez</th>
+                                    <th class="px-6 py-3">Categoría Coach</th>
+                                    <th class="px-6 py-3">Conflictos / Estado</th>
+                                    <th class="px-6 py-3 text-center">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaRoles" class="divide-y divide-gray-200">
+                                <!-- Datos cargados por JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ======================= TAB 2: ASIGNACIONES ======================= -->
+            <div id="content-asignaciones" class="tab-content space-y-4 h-full flex flex-col">
+                
+                <!-- Selector de Evento -->
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-col md:flex-row items-center justify-between gap-4 shrink-0">
+                    <div class="flex items-center gap-3 w-full md:w-auto">
+                        <div class="bg-[#52C5CB]/20 p-2 rounded-lg text-[#5289CB]"><i class="fa-solid fa-trophy text-lg"></i></div>
+                        <div>
+                            <h3 class="font-bold text-gray-800">Seleccionar Evento</h3>
+                            <p class="text-xs text-gray-500">Elija el torneo para asignar jueces</p>
+                        </div>
+                    </div>
+                    <select id="selectEvento" onchange="cargarDatosAsignacion()" class="w-full md:w-64 border-2 border-gray-200 rounded-lg p-2.5 font-bold text-gray-700 focus:border-[#5852CB] outline-none transition-colors cursor-pointer">
+                        <option value="">-- Seleccione un Evento --</option>
+                        <!-- Cargado dinámicamente -->
+                    </select>
+                </div>
+
+                <!-- Panel Dual -->
+                <div id="panelAsignacion" class="flex-1 flex flex-col md:flex-row gap-6 min-h-0 hidden">
+                    
+                    <!-- Columna Izquierda: Jueces Disponibles -->
+                    <div class="w-full md:w-1/3 bg-white rounded-xl shadow-sm border border-gray-200 flex flex-col overflow-hidden">
+                        <div class="p-4 bg-gray-50 border-b border-gray-200">
+                            <h3 class="font-bold text-gray-700 flex items-center gap-2">
+                                <i class="fa-solid fa-user-plus text-green-600"></i> Jueces Disponibles
+                            </h3>
+                            <input type="text" id="busqDisp" onkeyup="filtrarDisponibles()" placeholder="Filtrar..." class="mt-2 w-full text-xs p-2 border rounded bg-white">
+                        </div>
+                        <div id="listaDisponibles" class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50/50">
+                            <!-- Cards de Jueces -->
+                        </div>
+                    </div>
+
+                    <!-- Columna Derecha: Asignados por Categoría -->
+                    <div class="w-full md:w-2/3 flex flex-col gap-4 overflow-y-auto pr-1">
+                        <h3 class="font-bold text-gray-500 text-xs uppercase tracking-wider mb-2">Categorías del Evento</h3>
+                        <div id="contenedorCategorias" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                            <!-- Categorías Cargadas Dinámicamente -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Estado Vacío -->
+                <div id="emptyStateEvento" class="flex-1 flex flex-col items-center justify-center text-gray-300 py-10">
+                    <i class="fa-solid fa-arrow-up text-4xl mb-4 animate-bounce"></i>
+                    <p class="text-lg font-medium">Seleccione un evento arriba para comenzar</p>
+                </div>
+
+            </div>
+
+        </div>
+    </main>
+
+    <!-- MODAL EDICIÓN ROL (TAB 1) -->
+    <div id="modalEditar" class="modal fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+        <div class="modal-content bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
+            <div class="bg-gradient-to-r from-[#5852CB] to-[#5289CB] p-4 text-white flex justify-between items-center">
+                <h3 class="font-bold text-lg">Editar Rol</h3>
+                <button onclick="cerrarModal()" class="hover:bg-white/20 p-1 rounded-lg"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <h4 class="text-xl font-bold text-center" id="modalNombre">Usuario</h4>
+                <div class="space-y-2">
+                    <label class="block text-sm font-bold text-gray-700">Rol:</label>
+                    <select id="modalSelectRol" class="w-full border rounded-lg p-3 bg-gray-50 cursor-pointer">
+                        <option value="COACH">Coach</option>
+                        <option value="JUEZ">Juez</option>
+                        <option value="COACH_JUEZ">Ambos</option>
+                    </select>
+                </div>
+            </div>
+            <div class="p-4 bg-gray-50 border-t flex justify-end gap-2">
+                <button onclick="cerrarModal()" class="px-4 py-2 rounded text-gray-600 font-bold">Cancelar</button>
+                <button onclick="guardarRol()" class="px-6 py-2 rounded bg-[#5852CB] text-white font-bold hover:bg-[#4c46b6]">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL CONFIRMAR ASIGNACIÓN (TAB 2) -->
+    <div id="modalAsignar" class="modal fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+        <div class="modal-content bg-white w-full max-w-sm rounded-xl shadow-2xl p-6 text-center">
+            <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+                <i class="fa-solid fa-check"></i>
+            </div>
+            <h3 class="text-lg font-bold mb-2">Confirmar Asignación</h3>
+            <p class="text-sm text-gray-600 mb-6">
+                ¿Asignar a <strong id="assignJuezName"></strong> a la categoría <strong id="assignCatName"></strong>?
+            </p>
+            <div class="flex justify-center gap-3">
+                <button onclick="cerrarModalAsignar()" class="px-4 py-2 border rounded-lg text-gray-600 text-sm font-bold">Cancelar</button>
+                <button onclick="confirmarAsignacion()" class="px-4 py-2 bg-[#52C5CB] text-white rounded-lg text-sm font-bold hover:bg-[#43aeb3]">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="toast">
+        <div id="toastIcon" class="text-xl"></div>
+        <div class="text-sm font-medium" id="toastMessage"></div>
+    </div>
+
+    <!-- JAVASCRIPT -->
+    <script>
+        const API_URL = '../Configuracion/promover_juez.php';
+        let usuarioEditId = null;
+        let catalogoCategorias = [];
+        let asignacionPendiente = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Cargar datos iniciales
+            cargarTablaRoles();
+            cargarCatalogos();
+        });
+
+        // --- TABS LOGIC ---
+        function cambiarTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            document.getElementById(`tab-${tab}`).classList.add('active');
+            document.getElementById(`content-${tab}`).classList.add('active');
+        }
+
+        // =================================================================
+        //                        TAB 1: ROLES
+        // =================================================================
+        async function cargarTablaRoles() {
+            const tbody = document.getElementById('tablaRoles');
+            tbody.innerHTML = '<tr><td colspan="7" class="p-6 text-center"><div class="loader mx-auto"></div></td></tr>';
+
+            try {
+                const res = await fetch(`${API_URL}?action=listar_usuarios`);
+                const json = await res.json();
+
+                if(json.success && json.data) {
+                    tbody.innerHTML = '';
+                    json.data.forEach(u => {
+                        // Detectar conflictos visuales (mismo juez en categoría donde es coach)
+                        const catsJ = (u.categorias_juez || '').split(', ').filter(Boolean);
+                        const catsE = (u.categorias_equipos || '').split(', ').filter(Boolean);
+                        const conflictos = catsJ.filter(c => catsE.includes(c));
+                        const tieneConflicto = conflictos.length > 0;
+
+                        const badgeColor = u.tipo_usuario === 'JUEZ' ? 'bg-purple-100 text-purple-700' : 
+                                          (u.tipo_usuario === 'COACH_JUEZ' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700');
+
+                        const displayCatJuez = u.categorias_juez 
+                            ? `<span class="font-medium text-purple-700">${u.categorias_juez}</span>` 
+                            : '<span class="text-gray-300 italic text-xs">Ninguna</span>';
+                            
+                        const displayCatCoach = u.categorias_equipos 
+                            ? `<span class="font-medium text-blue-700">${u.categorias_equipos}</span>` 
+                            : '<span class="text-gray-300 italic text-xs">Ninguna</span>';
+
+                        const tr = document.createElement('tr');
+                        tr.className = `hover:bg-gray-50 border-b fila-rol ${tieneConflicto ? 'bg-red-50' : ''}`;
+                        tr.innerHTML = `
+                            <td class="px-6 py-4">
+                                <p class="font-bold text-gray-800 text-sm nombre-rol">${u.nombres} ${u.apellidos}</p>
+                                <p class="text-xs text-gray-500">${u.email}</p>
+                                <p class="text-[10px] text-gray-400 mt-1"><i class="fa-solid fa-school"></i> ${u.escuela_proc}</p>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <span class="${badgeColor} px-2 py-1 rounded text-[10px] font-bold border uppercase">${u.tipo_usuario.replace('_', ' ')}</span>
+                            </td>
+                            <td class="px-6 py-4 text-xs text-gray-600 max-w-xs break-words">
+                                ${displayCatJuez}
+                            </td>
+                            <td class="px-6 py-4 text-xs text-gray-600 max-w-xs break-words">
+                                ${displayCatCoach}
+                            </td>
+                            <td class="px-6 py-4 text-xs text-gray-500">
+                                ${tieneConflicto 
+                                    ? `<div class="text-red-600 font-bold"><i class="fa-solid fa-triangle-exclamation"></i> Conflicto en: ${conflictos.join(', ')}</div>` 
+                                    : (u.tipo_usuario !== 'COACH' ? '<span class="text-green-600"><i class="fa-solid fa-check"></i> Sin conflictos</span>' : '-')}
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <button onclick="abrirModalRol(${u.id_usuario}, '${u.nombres}', '${u.tipo_usuario}')" class="text-[#5852CB] hover:bg-[#5852CB]/10 p-2 rounded transition">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        function abrirModalRol(id, nombre, rol) {
+            usuarioEditId = id;
+            document.getElementById('modalNombre').innerText = nombre;
+            document.getElementById('modalSelectRol').value = rol;
+            document.getElementById('modalEditar').classList.add('active');
+        }
+
+        function cerrarModal() {
+            document.getElementById('modalEditar').classList.remove('active');
+        }
+
+        async function guardarRol() {
+            const rol = document.getElementById('modalSelectRol').value;
+            try {
+                const res = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ accion: 'actualizar_rol', id: usuarioEditId, rol: rol })
+                });
+                const json = await res.json();
+                if(json.success) {
+                    mostrarToast(json.message, 'success');
+                    cerrarModal();
+                    cargarTablaRoles();
+                } else {
+                    mostrarToast(json.message, 'error');
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        function filtrarTablaRoles() {
+            const txt = document.getElementById('buscadorRoles').value.toLowerCase();
+            document.querySelectorAll('.fila-rol').forEach(row => {
+                const nombre = row.querySelector('.nombre-rol').innerText.toLowerCase();
+                row.style.display = nombre.includes(txt) ? '' : 'none';
+            });
+        }
+
+        // =================================================================
+        //                        TAB 2: ASIGNACIONES
+        // =================================================================
+        
+        async function cargarCatalogos() {
+            const res = await fetch(`${API_URL}?action=obtener_catalogos`);
+            const json = await res.json();
+            
+            if(json.success) {
+                // Eventos Select
+                const sel = document.getElementById('selectEvento');
+                json.eventos.forEach(e => {
+                    const opt = document.createElement('option');
+                    opt.value = e.id_evento;
+                    opt.innerText = e.nombre_evento;
+                    sel.appendChild(opt);
+                });
+                // Guardar Categorías
+                catalogoCategorias = json.categorias;
+            }
+        }
+
+        async function cargarDatosAsignacion() {
+            const idEvento = document.getElementById('selectEvento').value;
+            const panel = document.getElementById('panelAsignacion');
+            const empty = document.getElementById('emptyStateEvento');
+
+            if(!idEvento) {
+                panel.classList.add('hidden');
+                empty.classList.remove('hidden');
+                return;
+            }
+
+            panel.classList.remove('hidden');
+            empty.classList.add('hidden');
+
+            // 1. Cargar Jueces Disponibles (Todos)
+            const resDisp = await fetch(`${API_URL}?action=jueces_disponibles`);
+            const jsonDisp = await resDisp.json();
+            
+            // 2. Cargar Asignados en este Evento
+            const resAsig = await fetch(`${API_URL}?action=jueces_asignados&id_evento=${idEvento}`);
+            const jsonAsig = await resAsig.json();
+            
+            const asignados = jsonAsig.success ? jsonAsig.data : [];
+
+            renderizarInterfazAsignacion(jsonDisp.data, asignados);
+        }
+
+        function renderizarInterfazAsignacion(disponibles, asignados) {
+            // --- A. Renderizar Jueces Disponibles ---
+            const listaDiv = document.getElementById('listaDisponibles');
+            listaDiv.innerHTML = '';
+            
+            // 1. Crear conjunto de IDs de jueces YA asignados a cualquier categoría de este evento
+            const idsAsignados = new Set(asignados.map(a => a.id_usuario));
+
+            // 2. Filtrar disponibles: Solo mostramos los que NO están en el conjunto de asignados
+            const disponiblesParaMostrar = disponibles.filter(j => !idsAsignados.has(j.id_usuario));
+
+            if (disponiblesParaMostrar.length === 0) {
+                 listaDiv.innerHTML = `
+                    <div class="flex flex-col items-center justify-center h-40 text-gray-400 text-center">
+                        <i class="fa-solid fa-check-double text-3xl mb-2"></i>
+                        <p class="text-xs">Todos los jueces disponibles<br>han sido asignados.</p>
+                    </div>
+                 `;
+            }
+            
+            disponiblesParaMostrar.forEach(j => {
+                const card = document.createElement('div');
+                card.className = "bg-white p-3 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow cursor-grab active:cursor-grabbing juez-card flex justify-between items-center";
+                card.draggable = true;
+                card.ondragstart = (e) => e.dataTransfer.setData("juezData", JSON.stringify(j));
+                
+                card.innerHTML = `
+                    <div class="flex items-center gap-2 overflow-hidden">
+                        <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs shrink-0">
+                            ${j.nombre_completo.charAt(0)}
+                        </div>
+                        <div class="truncate">
+                            <p class="text-xs font-bold text-gray-800 truncate">${j.nombre_completo}</p>
+                            <p class="text-[10px] text-gray-400">ID: ${j.id_usuario}</p>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-grip-vertical text-gray-300"></i>
+                `;
+                listaDiv.appendChild(card);
+            });
+
+            // --- B. Renderizar Categorías y sus Jueces ---
+            const catDiv = document.getElementById('contenedorCategorias');
+            catDiv.innerHTML = '';
+
+            catalogoCategorias.forEach(cat => {
+                // Filtrar jueces de esta categoría
+                const enCategoria = asignados.filter(a => a.id_categoria == cat.id_categoria);
+                const isFull = enCategoria.length >= 3;
+
+                const wrapper = document.createElement('div');
+                wrapper.className = "bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col";
+                
+                let headerColor = isFull ? 'bg-green-50 border-b border-green-100' : 'bg-gray-50 border-b border-gray-100';
+                
+                wrapper.innerHTML = `
+                    <div class="p-3 ${headerColor} flex justify-between items-center rounded-t-xl">
+                        <h4 class="font-bold text-gray-700 text-sm">${cat.nombre_categoria}</h4>
+                        <span class="text-xs font-bold ${isFull ? 'text-green-600' : 'text-gray-400'}">
+                            ${enCategoria.length}/3 <i class="fa-solid fa-user"></i>
+                        </span>
+                    </div>
+                    <div class="p-3 space-y-2 min-h-[80px] flex-1 bg-white relative transition-colors" 
+                         ondragover="permitirDrop(event)" 
+                         ondrop="manejarDrop(event, ${cat.id_categoria}, '${cat.nombre_categoria}')"
+                         id="cat-zone-${cat.id_categoria}">
+                         
+                         ${enCategoria.length === 0 ? '<p class="text-xs text-gray-300 text-center mt-4 pointer-events-none">Arrastra jueces aquí</p>' : ''}
+                    </div>
+                `;
+
+                // Agregar jueces dentro
+                const zona = wrapper.querySelector(`#cat-zone-${cat.id_categoria}`);
+                enCategoria.forEach(juez => {
+                    const jDiv = document.createElement('div');
+                    jDiv.className = "flex justify-between items-center bg-gray-50 p-2 rounded border border-gray-100 text-xs";
+                    jDiv.innerHTML = `
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-gavel text-[#52C5CB]"></i>
+                            <span class="font-semibold text-gray-700">${juez.nombres} ${juez.apellidos}</span>
+                        </div>
+                        <button onclick="removerJuez(${juez.id_usuario}, ${cat.id_categoria})" class="text-red-300 hover:text-red-500 transition">
+                            <i class="fa-solid fa-circle-minus"></i>
+                        </button>
+                    `;
+                    zona.appendChild(jDiv);
+                });
+
+                catDiv.appendChild(wrapper);
+            });
+        }
+
+        // --- Drag & Drop Logic ---
+        function permitirDrop(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('bg-blue-50');
+        }
+        
+        // Fix para quitar highlight al salir
+        document.addEventListener('dragleave', (e) => {
+            if(e.target.classList.contains('min-h-[80px]')) e.target.classList.remove('bg-blue-50');
+        });
+
+        function manejarDrop(e, idCat, nombreCat) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('bg-blue-50');
+            const data = e.dataTransfer.getData("juezData");
+            if(!data) return;
+            
+            const juez = JSON.parse(data);
+            prepararAsignacion(juez.id_usuario, juez.nombre_completo, idCat, nombreCat);
+        }
+
+        // --- Asignación ---
+        function prepararAsignacion(idJuez, nombreJuez, idCat, nombreCat) {
+            asignacionPendiente = { idJuez, idCat };
+            document.getElementById('assignJuezName').innerText = nombreJuez;
+            document.getElementById('assignCatName').innerText = nombreCat;
+            document.getElementById('modalAsignar').classList.add('active');
+        }
+
+        function cerrarModalAsignar() {
+            document.getElementById('modalAsignar').classList.remove('active');
+            asignacionPendiente = null;
+        }
+
+        async function confirmarAsignacion() {
+            if(!asignacionPendiente) return;
+            const idEvento = document.getElementById('selectEvento').value;
+            
+            try {
+                const res = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        accion: 'asignar_juez_evento',
+                        id_evento: idEvento,
+                        id_juez: asignacionPendiente.idJuez,
+                        id_categoria: asignacionPendiente.idCat
+                    })
+                });
+                const json = await res.json();
+                
+                if(json.success) {
+                    mostrarToast(json.message, 'success');
+                    cargarDatosAsignacion(); // Recargar visual
+                } else {
+                    mostrarToast(json.message, 'error');
+                }
+            } catch(e) { console.error(e); }
+            cerrarModalAsignar();
+        }
+
+        async function removerJuez(idJuez, idCat) {
+            if(!confirm("¿Quitar juez de esta categoría?")) return;
+            const idEvento = document.getElementById('selectEvento').value;
+
+            try {
+                const res = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        accion: 'quitar_juez_evento',
+                        id_evento: idEvento,
+                        id_juez: idJuez,
+                        id_categoria: idCat
+                    })
+                });
+                const json = await res.json();
+                if(json.success) {
+                    mostrarToast("Juez removido", 'success');
+                    cargarDatosAsignacion();
+                } else {
+                    mostrarToast(json.message, 'error');
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        // --- Filtros ---
+        function filtrarDisponibles() {
+            const txt = document.getElementById('busqDisp').value.toLowerCase();
+            document.querySelectorAll('.juez-card').forEach(c => {
+                c.style.display = c.innerText.toLowerCase().includes(txt) ? 'flex' : 'none';
+            });
+        }
+
+        function mostrarToast(msg, type) {
+            const t = document.getElementById('toast');
+            document.getElementById('toastMessage').innerText = msg;
+            document.getElementById('toastIcon').innerHTML = type == 'success' ? '<i class="fa-solid fa-circle-check text-green-500"></i>' : '<i class="fa-solid fa-circle-xmark text-red-500"></i>';
+            t.className = `toast ${type == 'success' ? 'toast-success' : 'toast-error'} show`;
+            setTimeout(() => t.classList.remove('show'), 3000);
+        }
+    </script>
+</body>
+</html>

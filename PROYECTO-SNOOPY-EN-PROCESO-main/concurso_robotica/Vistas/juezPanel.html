@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Juez - Evaluación</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <!-- Estilos Específicos de Juez -->
+    <link rel="stylesheet" href="../Diseño/style_juez.css">
+</head>
+<body class="bg-gray-50 h-screen flex flex-col overflow-hidden">
+
+    <!-- HEADER -->
+    <header class="gradient-header text-white shadow-lg z-10 shrink-0">
+        <div class="container mx-auto px-6 py-3 flex justify-between items-center">
+            <!-- Identidad -->
+            <div class="flex items-center gap-3">
+                <div class="bg-white/20 p-2 rounded-lg backdrop-blur-sm">
+                    <i class="fa-solid fa-gavel text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold tracking-wide">PANEL DE EVALUACIÓN</h1>
+                    <p class="text-xs text-white/90 font-medium opacity-80">Bienvenido Juez</p>
+                </div>
+            </div>
+            
+            <!-- Controles Usuario -->
+            <div class="flex items-center gap-4">
+                <div class="text-right hidden md:block">
+                    <!-- Se podría cargar el nombre real desde JS -->
+                    <p class="text-sm font-bold" id="juezName">Juez</p>
+                    <p class="text-[10px] bg-white/20 px-2 py-0.5 rounded-full inline-block">Sesión Activa</p>
+                </div>
+                
+                <!-- BOTÓN CERRAR SESIÓN -->
+                <button onclick="handleLogout()" class="bg-white/10 hover:bg-white/20 text-white p-2 rounded-lg transition-colors border border-white/10 shadow-sm" title="Cerrar Sesión">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="flex-1 overflow-y-auto p-6">
+        <div class="container mx-auto max-w-6xl space-y-8">
+
+            <!-- Bienvenida / Stats Rápidos -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade">
+                <div class="card p-6 border-l-4 border-l-[#52C5CB] flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-xs font-bold uppercase">Proyectos Asignados</p>
+                        <h3 class="text-3xl font-bold text-gray-800" id="statAsignados">0</h3>
+                    </div>
+                    <div class="bg-blue-50 text-[#52C5CB] w-12 h-12 rounded-full flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-clipboard-list"></i>
+                    </div>
+                </div>
+                <div class="card p-6 border-l-4 border-l-yellow-400 flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-xs font-bold uppercase">Pendientes</p>
+                        <h3 class="text-3xl font-bold text-gray-800" id="statPendientes">0</h3>
+                    </div>
+                    <div class="bg-yellow-50 text-yellow-500 w-12 h-12 rounded-full flex items-center justify-center text-xl">
+                        <i class="fa-regular fa-clock"></i>
+                    </div>
+                </div>
+                <div class="card p-6 border-l-4 border-l-green-500 flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-xs font-bold uppercase">Evaluados</p>
+                        <h3 class="text-3xl font-bold text-gray-800" id="statEvaluados">0</h3>
+                    </div>
+                    <div class="bg-green-50 text-green-500 w-12 h-12 rounded-full flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-check-double"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lista de Proyectos -->
+            <div class="card animate-slide">
+                <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50 rounded-t-xl">
+                    <h3 class="font-bold text-gray-700 flex items-center gap-2">
+                        <i class="fa-solid fa-list-check text-[#5852CB]"></i>
+                        Proyectos por Evaluar
+                    </h3>
+                    
+                    <!-- Filtro Categoría -->
+                    <select id="filtroCategoria" onchange="cargarProyectos()" class="bg-white border border-gray-300 text-gray-600 text-sm rounded-lg focus:ring-[#5852CB] focus:border-[#5852CB] block p-2 outline-none cursor-pointer">
+                        <option value="TODOS">Todas las Categorías</option>
+                        <!-- Se llenará dinámicamente -->
+                    </select>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left">
+                        <thead class="text-xs text-gray-500 uppercase bg-white border-b">
+                            <tr>
+                                <th class="px-6 py-3">ID</th>
+                                <th class="px-6 py-3">Equipo / Proyecto</th>
+                                <th class="px-6 py-3">Categoría</th>
+                                <th class="px-6 py-3 text-center">Estado</th>
+                                <th class="px-6 py-3 text-center">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaProyectos" class="divide-y divide-gray-100">
+                            <!-- Estado de Carga Inicial -->
+                            <tr>
+                                <td colspan="5" class="px-6 py-12 text-center text-gray-400">
+                                    <div class="flex flex-col items-center">
+                                        <div class="loader mb-3"></div>
+                                        <p>Cargando proyectos asignados...</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Script Lógica -->
+    <script>
+        const API_URL = '../Configuracion/juez_controlador.php';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            cargarFiltros();
+            cargarProyectos();
+        });
+
+        // --- 1. CARGAR CATEGORÍAS ASIGNADAS (Filtro) ---
+        async function cargarFiltros() {
+            try {
+                const res = await fetch(`${API_URL}?action=obtener_categorias`);
+                const json = await res.json();
+                
+                if (json.success && json.data) {
+                    const select = document.getElementById('filtroCategoria');
+                    json.data.forEach(cat => {
+                        const opt = document.createElement('option');
+                        opt.value = cat.nombre_categoria;
+                        opt.innerText = cat.nombre_categoria;
+                        select.appendChild(opt);
+                    });
+                }
+            } catch (e) { console.error("Error filtros:", e); }
+        }
+
+        // --- 2. CARGAR PROYECTOS DE LA BD ---
+        async function cargarProyectos() {
+            const tbody = document.getElementById('tablaProyectos');
+            const categoria = document.getElementById('filtroCategoria').value;
+            
+            // Mostrar loader
+            tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-12 text-center text-gray-400"><div class="flex flex-col items-center"><div class="loader mb-3"></div><p>Actualizando lista...</p></div></td></tr>`;
+
+            try {
+                const res = await fetch(`${API_URL}?action=listar_proyectos&categoria=${categoria}`);
+                const json = await res.json();
+
+                if (json.success) {
+                    renderizarTabla(json.data);
+                    actualizarStats(json.data);
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-red-400">${json.message}</td></tr>`;
+                }
+
+            } catch (error) {
+                console.error("Error proyectos:", error);
+                tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-red-400">Error de conexión con el servidor.</td></tr>`;
+            }
+        }
+
+        // --- 3. RENDERIZAR TABLA ---
+        function renderizarTabla(proyectos) {
+            const tbody = document.getElementById('tablaProyectos');
+            tbody.innerHTML = '';
+
+            if (proyectos.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-gray-400 italic">No tienes proyectos asignados en esta categoría aún.</td></tr>`;
+                return;
+            }
+
+            proyectos.forEach(p => {
+                const esEvaluado = p.estado_proyecto === 'EVALUADO';
+                const badgeClass = esEvaluado ? 'badge-evaluated' : 'badge-pending';
+                const estadoIcon = esEvaluado ? '<i class="fa-solid fa-check"></i>' : '<i class="fa-regular fa-clock"></i>';
+                
+                // --- AQUÍ ESTÁ LA SOLUCIÓN DEL BOTÓN ---
+                // Botón deshabilitado si ya está evaluado (opcional, o permitir re-evaluar)
+                // Usamos encodeURIComponent para asegurar que nombres con espacios pasen bien por la URL
+                const btnAccion = `<button onclick="irAEvaluar(${p.id_equipo}, '${encodeURIComponent(p.nombre_equipo)}', '${encodeURIComponent(p.nombre_prototipo)}')" 
+                                    class="bg-[#5852CB] hover:bg-[#4c46b6] text-white px-4 py-2 rounded-lg text-xs font-bold shadow-md transition flex items-center justify-center gap-2 mx-auto">
+                                    ${esEvaluado ? 'Editar / Ver' : 'Evaluar'} <i class="fa-solid fa-arrow-right"></i>
+                                   </button>`;
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50 transition-colors border-b last:border-0";
+                tr.innerHTML = `
+                    <td class="px-6 py-4 font-mono text-xs text-gray-500">#${p.id_equipo}</td>
+                    <td class="px-6 py-4">
+                        <p class="font-bold text-gray-800">${p.nombre_equipo}</p>
+                        <p class="text-xs text-gray-500"><i class="fa-solid fa-microchip mr-1"></i> ${p.nombre_prototipo}</p>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="bg-blue-50 text-blue-600 border border-blue-100 text-xs font-bold px-2 py-1 rounded uppercase">${p.nombre_categoria}</span>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <span class="badge ${badgeClass} inline-flex items-center gap-1">${estadoIcon} ${p.estado_proyecto}</span>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        ${btnAccion}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // --- 4. FUNCIÓN DE REDIRECCIÓN (LO QUE FALTABA) ---
+        function irAEvaluar(id, nombre, prototipo) {
+            // Decodificamos por si acaso, aunque la URL lo maneja, es buena práctica si manipulamos strings
+            // La redirección pasa los parámetros por URL GET para que evaluarProyecto.html los lea.
+            window.location.href = `evaluarProyecto.html?id=${id}&equipo=${nombre}&prototipo=${prototipo}`;
+        }
+
+        function actualizarStats(data) {
+            const total = data.length;
+            const evaluados = data.filter(p => p.estado_proyecto === 'EVALUADO').length;
+            const pendientes = total - evaluados;
+
+            document.getElementById('statAsignados').innerText = total;
+            document.getElementById('statPendientes').innerText = pendientes;
+            document.getElementById('statEvaluados').innerText = evaluados;
+        }
+
+        function handleLogout() {
+            window.location.href = '../Configuracion/logout.php';
+        }
+    </script>
+</body>
+</html>

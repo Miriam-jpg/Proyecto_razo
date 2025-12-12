@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración - Gestión de Torneo</title>
+    
+    <!-- Librerías -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"></script>
+
+    <link rel="stylesheet" href="../Diseño/style_admin.css">
+</head>
+<body class="h-screen flex flex-col overflow-hidden">
+
+    <!-- HEADER -->
+    <header class="gradient-header text-white shadow-lg z-20 shrink-0">
+        <div class="container mx-auto px-6 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="bg-white/20 p-2 rounded-lg backdrop-blur-sm">
+                    <i class="fa-solid fa-user-shield text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold tracking-wide">ADMINISTRACIÓN</h1>
+                    <p class="text-xs text-white/80 font-medium">Gestión del Concurso</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <div class="text-right hidden md:block">
+                    <p class="text-sm font-bold" id="adminName">Administrador</p>
+                    <p class="text-[10px] bg-green-400/20 px-2 py-0.5 rounded-full inline-block text-green-100">
+                        <i class="fa-solid fa-circle text-[6px] mr-1 align-middle"></i>Sesión Activa
+                    </p>
+                </div>
+                <!-- BOTÓN CERRAR SESIÓN -->
+                <button onclick="handleLogout()" class="bg-white/10 hover:bg-white/20 p-2 rounded-lg transition-colors" title="Cerrar Sesión">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden relative">
+        
+        <!-- SIDEBAR -->
+        <aside class="w-64 bg-white border-r border-gray-200 flex-col hidden md:flex z-10">
+            <div class="p-6">
+                <p class="text-xs font-bold text-gray-400 uppercase mb-4 tracking-wider">Menú Principal</p>
+                <nav class="space-y-2">
+                    <!-- Botón Dashboard (Actual) -->
+                    <button onclick="window.location.reload()" class="w-full text-left px-4 py-3 rounded-xl bg-gray-50 text-[#5289CB] font-bold border-l-4 border-[#5289CB] shadow-sm flex items-center gap-3">
+                        <i class="fa-solid fa-chart-pie w-5 text-center"></i> Dashboard
+                    </button>
+                    
+                    <!-- ENLACE DIRECTO A GESTIÓN EVENTOS -->
+                    <a href="gestionEvento.html" class="nav-item w-full text-left px-4 py-3 rounded-xl text-gray-500 flex items-center gap-3">
+                        <i class="fa-solid fa-calendar-check w-5 text-center"></i> Gestionar Eventos
+                    </a>
+                    
+                    <!-- ENLACE DIRECTO A PROMOVER JUEZ -->
+                    <a href="promoverJuez.html" class="nav-item w-full text-left px-4 py-3 rounded-xl text-gray-500 flex items-center gap-3">
+                        <i class="fa-solid fa-user-graduate w-5 text-center"></i> Promover Juez
+                    </a>
+                </nav>
+            </div>
+            
+            <div class="mt-auto p-6 border-t border-gray-100">
+                <div class="bg-blue-50 rounded-xl p-4 border border-blue-100">
+                    <h4 class="text-xs font-bold text-blue-800 mb-1">Estado del Sistema</h4>
+                    <p class="text-[10px] text-blue-600">Base de datos: <span class="font-bold">Conectada</span></p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- CONTENIDO -->
+        <main class="flex-1 overflow-y-auto bg-[#f8f9fa] p-8 relative">
+            <div id="loaderOverlay" class="absolute inset-0 bg-white/80 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+                <div class="loader"></div>
+            </div>
+
+            <section class="animate-fade-in space-y-6">
+                <div class="flex justify-between items-end">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800">Bienvenido al Sistema</h2>
+                        <p class="text-sm text-gray-500">Seleccione una acción rápida para comenzar.</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Card: GESTIÓN DE EVENTOS -->
+                    <a href="gestionEvento.html" class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all group hover:border-[#52C5CB]">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-[#5289CB] text-xl group-hover:scale-110 transition-transform">
+                                <i class="fa-solid fa-trophy"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-800 group-hover:text-[#5289CB]">Gestionar Eventos</h3>
+                                <p class="text-xs text-gray-500">Crear o eliminar competencias</p>
+                            </div>
+                            <div class="ml-auto text-gray-300 group-hover:text-[#5289CB]">
+                                <i class="fa-solid fa-arrow-right"></i>
+                            </div>
+                        </div>
+                    </a>
+
+                    <!-- Card: PROMOVER JUECES -->
+                    <a href="promoverJuez.html" class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all group hover:border-[#5852CB]">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center text-[#5852CB] text-xl group-hover:scale-110 transition-transform">
+                                <i class="fa-solid fa-users-gear"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-800 group-hover:text-[#5852CB]">Promover Jueces</h3>
+                                <p class="text-xs text-gray-500">Asignar roles a Coaches</p>
+                            </div>
+                            <div class="ml-auto text-gray-300 group-hover:text-[#5852CB]">
+                                <i class="fa-solid fa-arrow-right"></i>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- LÓGICA JAVASCRIPT CORREGIDA -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        let auth = null;
+
+        try {
+            const configParam = new URLSearchParams(window.location.search).get('firebaseConfig');
+            
+            if (configParam) {
+                const firebaseConfig = JSON.parse(configParam);
+                const app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                
+                onAuthStateChanged(auth, (user) => {
+                    if (!user) signInAnonymously(auth).catch(console.error);
+                });
+            }
+        } catch (error) {
+            console.error("Error inicializando Firebase:", error);
+        }
+
+        // --- FUNCIÓN DE LOGOUT HÍBRIDA (FIREBASE + PHP) ---
+        window.handleLogout = () => {
+            const irALogoutPHP = () => {
+                // Redirige al script PHP que destruye la sesión del servidor
+                window.location.href = '../Configuracion/logout.php';
+            };
+
+            if (auth) {
+                // Si existe Firebase, cerramos sesión ahí primero por limpieza
+                signOut(auth)
+                    .then(irALogoutPHP)
+                    .catch((error) => {
+                        console.warn("Error cerrando Firebase, forzando salida PHP...", error);
+                        irALogoutPHP();
+                    });
+            } else {
+                // Si no hay Firebase, vamos directo al PHP
+                irALogoutPHP();
+            }
+        };
+    </script>
+</body>
+</html>

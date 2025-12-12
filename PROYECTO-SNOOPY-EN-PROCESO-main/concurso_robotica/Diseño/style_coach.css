@@ -1,0 +1,148 @@
+/* --- ESTILOS GENERALES --- */
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f8f9fa;
+    color: #2d3748;
+}
+
+/* Scrollbar personalizada */
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-track {
+    background: #f1f1f1; 
+}
+::-webkit-scrollbar-thumb {
+    background: #c1c1c1; 
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8; 
+}
+
+/* --- GRADIENTES Y COLORES --- */
+.gradient-bg {
+    background: linear-gradient(to bottom, #52C5CB, #5852CB);
+}
+
+.gradient-text {
+    background: linear-gradient(to right, #52C5CB, #5852CB);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.btn-gradient {
+    background: linear-gradient(to right, #5289CB, #5852CB);
+    color: white;
+    font-weight: bold;
+    transition: all 0.2s ease;
+}
+.btn-gradient:hover {
+    opacity: 0.95;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* --- TARJETAS Y PANELES --- */
+.glass-card {
+    background: rgba(255, 255, 255, 0.98);
+    border-radius: 1rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(229, 231, 235, 0.5);
+}
+
+.team-card {
+    background: white;
+    border-radius: 0.75rem;
+    border: 1px solid #e2e8f0;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+.team-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+    border-color: #52C5CB;
+}
+
+.team-card.selected {
+    border: 2px solid #52C5CB;
+    background-color: #f8fdff;
+}
+
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+.status-evaluado {
+    background-color: #def7ec;
+    color: #03543f;
+}
+.status-pendiente {
+    background-color: #fff8f1;
+    color: #9c4221;
+}
+
+/* --- FORMULARIOS --- */
+.input-field {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    border: 1px solid #e2e8f0;
+    background-color: #f8fafc;
+    transition: all 0.2s;
+    font-size: 0.95rem;
+}
+.input-field:focus {
+    outline: none;
+    border-color: #52C5CB;
+    background-color: white;
+    box-shadow: 0 0 0 3px rgba(82, 197, 203, 0.1);
+}
+
+/* --- ANIMACIONES --- */
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-up {
+    animation: slideUp 0.4s ease-out forwards;
+}
+
+.loader {
+    border: 3px solid #f3f3f3;
+    border-radius: 50%;
+    border-top: 3px solid #52C5CB;
+    width: 24px;
+    height: 24px;
+    -webkit-animation: spin 1s linear infinite;
+    animation: spin 1s linear infinite;
+}
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+/* Toast */
+.toast {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 50;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    background: white;
+    border-left: 4px solid;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transform: translateX(120%);
+    transition: transform 0.3s ease-in-out;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 300px;
+}
+.toast.show { transform: translateX(0); }
+.toast-success { border-color: #10B981; }
+.toast-error { border-color: #EF4444; }
