@@ -11,7 +11,6 @@
     <link rel="stylesheet" href="../Diseño/style_juez.css">
 
     <style>
-        /* Estilos personalizados para mantener la estética original */
         .header-diseno { background-color: #fff5f5; border-left: 5px solid #f56565; color: #c53030; }
         .header-prog { background-color: #f0fff4; border-left: 5px solid #48bb78; color: #2f855a; }
         .header-const { background-color: #ebf8ff; border-left: 5px solid #4299e1; color: #2b6cb0; }
@@ -31,7 +30,8 @@
             height: 100%;
         }
         
-        .check-card:hover { border-color: #cbd5e0; background-color: #f8fafc; }
+        /* Efectos visuales solo si NO está deshabilitado */
+        body:not(.readonly-mode) .check-card:hover { border-color: #cbd5e0; background-color: #f8fafc; }
         
         .check-input:checked + .check-card {
             border-color: #5852CB;
@@ -44,6 +44,10 @@
             transform: scale(1.1);
         }
 
+        /* Estilos para modo lectura */
+        body.readonly-mode .check-card { cursor: default; opacity: 0.9; }
+        body.readonly-mode .check-input:not(:checked) + .check-card { background-color: #f9fafb; color: #9ca3af; }
+        
         .sticky-summary { position: sticky; bottom: 1rem; z-index: 40; }
         .score-transition { transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
     </style>
@@ -62,7 +66,7 @@
                 </div>
             </div>
             <div class="text-right hidden md:block">
-                <div class="text-xs bg-green-500/20 text-green-300 px-3 py-1 rounded-full border border-green-500/30 inline-block font-bold">
+                <div id="statusBadge" class="text-xs bg-green-500/20 text-green-300 px-3 py-1 rounded-full border border-green-500/30 inline-block font-bold">
                     Modo Evaluación
                 </div>
             </div>
@@ -70,6 +74,17 @@
     </header>
 
     <main class="flex-1 container mx-auto p-4 md:p-6 max-w-6xl pb-32">
+        
+        <div id="readOnlyBanner" class="hidden bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 rounded shadow-sm animate-pulse">
+            <div class="flex items-center">
+                <div class="flex-shrink-0"><i class="fa-solid fa-lock text-yellow-500 text-2xl"></i></div>
+                <div class="ml-4">
+                    <h3 class="text-lg font-bold text-yellow-800">Evaluación Finalizada</h3>
+                    <p class="text-sm text-yellow-700">Este proyecto ya fue evaluado por <strong id="evaluatorName">--</strong> el <span id="evalDate">--</span>. Estás en modo de <strong>solo lectura</strong>.</p>
+                </div>
+            </div>
+        </div>
+
         <form id="evalForm" onsubmit="enviarEvaluacion(event)" class="space-y-8">
             
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex flex-col md:flex-row justify-between items-center gap-6 relative overflow-hidden">
@@ -108,7 +123,7 @@
 
             <div class="bg-blue-50 border-l-4 border-[#5852CB] p-4 text-sm text-blue-800 rounded-r-lg shadow-sm flex items-start gap-3">
                 <i class="fa-solid fa-circle-info mt-1"></i>
-                <p>Seleccione únicamente los criterios que el equipo <strong>CUMPLE satisfactoriamente</strong>. El sistema calculará la nota final basada en el porcentaje de cumplimiento.</p>
+                <p>Seleccione únicamente los criterios que el equipo <strong>CUMPLE satisfactoriamente</strong>.</p>
             </div>
 
             <section class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
@@ -543,7 +558,7 @@
                 </div>
             </section>
 
-            <div class="sticky-summary bg-white border-t border-gray-200 shadow-2xl p-4 rounded-xl flex justify-between items-center gap-4 animate-slide z-50">
+            <div id="actionFooter" class="sticky-summary bg-white border-t border-gray-200 shadow-2xl p-4 rounded-xl flex justify-between items-center gap-4 animate-slide z-50">
                 <div class="hidden md:block">
                     <p class="text-xs text-gray-500 font-bold uppercase">Resultado Final</p>
                     <div class="flex items-baseline gap-1">
@@ -554,9 +569,9 @@
                 
                 <div class="flex gap-3 w-full md:w-auto">
                     <button type="button" onclick="history.back()" class="flex-1 md:flex-none px-6 py-3 rounded-lg border border-gray-300 text-gray-600 font-bold hover:bg-gray-50 transition uppercase text-sm tracking-wide">
-                        Cancelar
+                        Salir
                     </button>
-                    <button type="submit" class="flex-1 md:flex-none bg-[#5852CB] hover:bg-[#4c46b6] transition-colors px-8 py-3 rounded-lg text-white font-bold shadow-lg shadow-indigo-200 flex items-center justify-center gap-2 uppercase text-sm tracking-wide">
+                    <button id="btnGuardar" type="submit" class="flex-1 md:flex-none bg-[#5852CB] hover:bg-[#4c46b6] transition-colors px-8 py-3 rounded-lg text-white font-bold shadow-lg shadow-indigo-200 flex items-center justify-center gap-2 uppercase text-sm tracking-wide">
                         <i class="fa-solid fa-paper-plane"></i> Guardar Evaluación
                     </button>
                 </div>
@@ -571,8 +586,9 @@
 
     <script>
         let currentEquipoId = 0;
+        let isReadOnly = false;
 
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             const urlParams = new URLSearchParams(window.location.search);
             currentEquipoId = urlParams.get('id');
             const nombre = urlParams.get('equipo') || "Equipo Desconocido";
@@ -588,36 +604,74 @@
             document.getElementById('nombrePrototipo').innerText = prototipo;
             document.getElementById('equipoIdDisplay').innerText = `ID: #${currentEquipoId}`;
             
-            // Inicializar contadores
-            calcularTotal();
+            // 1. CARGAR DATOS EXISTENTES
+            await cargarEvaluacionExistente();
+            
+            // 2. Si no es ReadOnly, calcular inicial
+            if (!isReadOnly) calcularTotal();
         });
 
+        async function cargarEvaluacionExistente() {
+            try {
+                const response = await fetch(`../Configuracion/juez_controlador.php?action=obtener_evaluacion&id_equipo=${currentEquipoId}`);
+                const result = await response.json();
+
+                if (result.success && result.data) {
+                    // MODO SOLO LECTURA
+                    isReadOnly = true;
+                    activarModoLectura(result.data);
+                }
+            } catch (error) {
+                console.error("Error verificando evaluación:", error);
+            }
+        }
+
+        function activarModoLectura(data) {
+            // Aplicar estilo visual
+            document.body.classList.add('readonly-mode');
+            document.getElementById('readOnlyBanner').classList.remove('hidden');
+            document.getElementById('evaluatorName').innerText = data.nombre_juez;
+            document.getElementById('evalDate').innerText = data.fecha_evaluacion;
+            document.getElementById('statusBadge').className = "text-xs bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full border border-yellow-300 inline-block font-bold";
+            document.getElementById('statusBadge').innerText = "Solo Lectura";
+
+            // Eliminar botón de guardar
+            document.getElementById('btnGuardar').remove();
+
+            // Marcar checkboxes y deshabilitar TODOS
+            const detalles = JSON.parse(data.detalles_evaluacion || '{}');
+            const inputs = document.querySelectorAll('.criteria-check');
+            
+            inputs.forEach(input => {
+                if (detalles[input.value]) {
+                    input.checked = true;
+                }
+                input.disabled = true; // Bloquear
+            });
+
+            // Recalcular total visualmente
+            calcularTotal();
+        }
+
         function calcularTotal() {
-            // Contar todos los checkboxes presentes en la página
             const allChecks = document.querySelectorAll('.criteria-check');
             const totalPossible = allChecks.length;
             const checkedCount = document.querySelectorAll('.criteria-check:checked').length;
 
-            // Evitar división por cero
             const score = totalPossible > 0 ? Math.round((checkedCount / totalPossible) * 100) : 0;
 
-            // Actualizar interfaz visual principal
             const circleText = document.getElementById('totalScoreCircle');
             const footerText = document.getElementById('footerScore');
             
-            // Animación simple de número
             circleText.innerText = score;
             footerText.innerText = score;
 
-            // Actualizar barra de progreso circular (SVG)
-            // Circunferencia = 2 * PI * 36 ≈ 226
             const circle = document.getElementById('progressCircle');
             const radius = 36;
             const circumference = 2 * Math.PI * radius;
             const offset = circumference - (score / 100) * circumference;
             circle.style.strokeDashoffset = offset;
 
-            // Color según puntaje
             if (score < 60) {
                 circle.classList.add('text-red-500'); circle.classList.remove('text-yellow-500', 'text-green-500', 'text-[#5852CB]');
             } else if (score < 80) {
@@ -628,7 +682,6 @@
                 circle.classList.add('text-[#5852CB]'); circle.classList.remove('text-red-500', 'text-yellow-500', 'text-green-500');
             }
 
-            // Actualizar badges por sección
             updateSectionBadge('.header-diseno', 'badge-diseno');
             updateSectionBadge('.header-prog', 'badge-prog');
             updateSectionBadge('.header-const', 'badge-const');
@@ -643,17 +696,17 @@
 
         async function enviarEvaluacion(e) {
             e.preventDefault();
+            if (isReadOnly) return; // Seguridad extra
             
-            if(!confirm("¿Confirmar envío de evaluación? Verifique que ha marcado todos los criterios cumplidos.")) return;
+            if(!confirm("¿Confirmar envío de evaluación? NO se podrá modificar después.")) return;
 
-            const btn = e.target.querySelector('button[type="submit"]');
+            const btn = document.getElementById('btnGuardar');
             const originalText = btn.innerHTML;
             btn.disabled = true;
             btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Guardando...';
 
             const totalScore = document.getElementById('footerScore').innerText;
 
-            // Recopilar qué criterios fueron marcados
             const detalles = {};
             document.querySelectorAll('.criteria-check').forEach(chk => {
                 detalles[chk.value] = chk.checked;
@@ -695,7 +748,6 @@
                 : '<i class="fa-solid fa-circle-xmark text-red-500"></i>';
             t.className = `toast ${type === 'success' ? 'toast-success' : 'toast-error'} show`;
             
-            // Estilos CSS inline
             t.style.position = 'fixed';
             t.style.bottom = '20px';
             t.style.right = '20px';
